@@ -1,2 +1,19 @@
 ---
-# handlers file for paulrentschler.django
+# Handlers for the role
+
+- name: Django Restart Apache
+  service:
+    name: apache2
+    state: restarted
+  become: yes
+
+- name: Django Restart WSGI
+  file:
+    path: "{{ django_app_path }}/wsgi.py"
+    state: touch
+
+- name: Django Restart uWSGI
+  file:
+    path: "{{ django_app_path }}/wsgi.py"
+    state: touch
+

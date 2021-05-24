@@ -1,2 +1,52 @@
 ---
-# defaults file for paulrentschler.django
+# defaults for Django application related variables
+
+
+# Application
+django_app: ""
+django_unit: ""
+django_deploy_key: ""
+
+# Installation paths
+django_hostname: students
+django_domain: equity.psu.edu
+django_vhost_template: vhost.j2
+django_install_dir: "{{ django_app }}"
+django_virtualenv_path: "/opt/{{ django_install_dir }}"
+django_app_path: "{{ django_virtualenv_path }}/app"
+django_src_path: "{{ django_virtualenv_path }}/src"
+django_url: "/{{ django_unit }}/{{ django_app }}"
+
+# Environment
+#   Valid values: development, demo, production
+#   Determines how the site behaves and messages that are repesented to the user
+django_environment: production
+
+# Packages
+django_app_package: {}
+django_standard_packages:
+  - name: django-pennstate
+    repo: par117/django-pennstate.git
+  - name: django_base
+    repo: educational-equity/django_base.git
+django_custom_packages: []
+
+# Fixtures
+django_lookup_data: "yes"
+django_demo_data: "no"
+
+# Logs
+django_log_files:
+  - piko.log
+
+# Directories to create
+django_directories: []
+
+# Database parameters
+django_db_engine: "django.db.backends.mysql"
+django_db_name: "{{ django_app }}"
+django_db_user: "{{ django_app }}"
+django_db_password: "{{ django_app }}user"
+django_db_host: ""
+django_db_port: ""
+

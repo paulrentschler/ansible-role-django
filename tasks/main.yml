@@ -1,2 +1,476 @@
 ---
-# tasks file for paulrentschler.django
+# Install and configure a Django application
+
+
+##
+# Create the virtual environment
+##
+- name: install pip
+  ansible.builtin.package:
+    name: python-pip
+    state: present
+  become: yes
+  tags:
+    - django_install
+
+- name: install virtualenv
+  ansible.builtin.pip:
+    name: virtualenv
+    state: present
+  become: yes
+  tags:
+    - django_install
+
+- name: create the virtual environment directory
+  ansible.builtin.file:
+    path: "{{ django_virtualenv_path }}"
+    state: directory
+    owner: root
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0775"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+- name: create the src directory
+  ansible.builtin.file:
+    path: "{{ django_src_path }}"
+    state: directory
+    owner: "{{ devops_user|default(ansible_user) }}"
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0775"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+
+
+##
+# Run pre-deploy scripts
+##
+- name: check for predeploy.sh script
+  ansible.builtin.stat:
+    path: "{{ django_virtualenv_path }}/predeploy.sh"
+  register: _django_predeploy_file
+  tags:
+    - django_deploy
+
+- name: run the predeploy.sh script
+  ansible.builtin.command: "{{ django_virtualenv_path }}/predeploy.sh"
+  when: _django_predeploy_file.stat.executable is defined and _django_predeploy_file.stat.executable
+  tags:
+    - django_deploy
+
+- name: make predeploy.sh non-executable
+  ansible.builtin.file:
+    path: "{{ django_virtualenv_path }}/predeploy.sh"
+    mode: "0664"
+  when: _django_predeploy_file.stat.executable is defined and _django_predeploy_file.stat.executable
+  tags:
+    - django_deploy
+
+
+
+##
+# Install the dependencies
+##
+- name: install the dependencies
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - build-essential
+    - python-dev
+    - libmysqlclient-dev
+    - python-mysqldb
+    - libjpeg-dev
+    - libz-dev
+    - libldap2-dev
+    - libsasl2-dev
+  become: yes
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+
+
+##
+# Install the code
+##
+- name: establish the .ssh directory
+  ansible.builtin.file:
+    path: ~/.ssh
+    state: directory
+    owner: "{{ devops_user|default(ansible_user) }}"
+    mode: "0755"
+  tags:
+    - django_config
+    - django_install
+
+- name: upload the deploy key
+  ansible.builtin.copy:
+    src: "{{ django_deploy_key }}"
+    dest: ~/.ssh/id_rsa
+    mode: "0400"
+  tags:
+    - django_deploy
+    - django_install
+
+
+### Install Python packages under development
+
+- name: clone/update standard and custom packages
+  ansible.builtin.git:
+    repo: "ssh://git@git.psu.edu/{{ item.repo }}"
+    dest: "{{ django_src_path }}/{{ item.name }}"
+    version: "{% if item.revision is defined %}{{ item.revision }}{% elif django_environment == 'production' %}master{% else %}develop{% endif %}"
+    accept_hostkey: yes
+  loop: "{{ django_standard_packages + django_custom_packages }}"
+  loop_control:
+    label: "{{ item.repo }}"
+  notify: Django Restart uWSGI
+  register: _django_gitclone
+  tags:
+    - django_deploy
+    - django_install
+
+- name: install the packages
+  ansible.builtin.pip:
+    name: "{{ django_src_path }}/{{ item.item.name }}"
+    editable: true
+    extra_args: "-e"
+    virtualenv: "{{ django_virtualenv_path }}"
+    state: present
+  loop: "{{ _django_gitclone.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.changed
+  become: yes
+  tags:
+    - django_deploy
+    - django_install
+
+
+### Install application package
+
+- name: install/update application package
+  ansible.builtin.git:
+    repo: "ssh://git@git.psu.edu/{{ django_app_package.repo }}"
+    dest: "{{ django_app_path }}"
+    version: "{% if django_app_package.revision is defined %}{{ django_app_package.revision }}{% elif django_environment == 'production' %}master{% else %}develop{% endif %}"
+    accept_hostkey: yes
+  notify: Django Restart uWSGI
+  tags:
+    - django_deploy
+    - django_install
+
+
+### Finalize the code installation
+
+- name: install the required python libraries
+  ansible.builtin.pip:
+    requirements: "{{ django_app_path }}/requirements.txt"
+    state: present
+    virtualenv: "{{ django_virtualenv_path }}"
+    virtualenv_site_packages: no
+  become: yes
+  notify: Django Restart uWSGI
+  tags:
+    - django_deploy
+    - django_install
+
+- name: make manage.py executable
+  ansible.builtin.file:
+    path: "{{ django_app_path }}/manage.py"
+    mode: "0775"
+  become: yes
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+
+
+##
+# Configure the application
+##
+- name: check for existing local settings file
+  ansible.builtin.stat: path={{ django_app_path }}/settings_local.py
+  register: _django_local_settings
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+- name: create the local settings file
+  ansible.builtin.template:
+    src: settings_local.py.j2
+    dest: "{{ django_app_path }}/settings_local.py"
+    backup: yes
+    owner: "{{ devops_user|default(ansible_user) }}"
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0664"
+  when: (_django_local_settings.stat.exists and overwrite_local_settings is defined) or not _django_local_settings.stat.exists
+  notify: Django Restart uWSGI
+  become: yes
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+- name: update local settings
+  ansible.builtin.debug: 'msg="Edit {{ django_app_path }}/settings_local.py to include necessary passwords."'
+  when: (_django_local_settings.stat.exists and overwrite_local_settings is defined) or not _django_local_settings.stat.exists
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+
+
+##
+# LOGS
+##
+- name: create the logs directory
+  ansible.builtin.file:
+    path: "{{ django_app_path }}/logs"
+    state: directory
+    owner: "{{ django_apache_user }}"
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0770"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+- name: create the logs archive directory
+  ansible.builtin.file:
+    path: "{{ django_app_path }}/logs/archive"
+    state: directory
+    owner: "{{ django_apache_user }}"
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0770"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+- name: create the log files
+  ansible.builtin.file:
+    path: "{{ django_app_path }}/logs/{{ item }}"
+    state: touch
+    owner: "{{ django_apache_user }}"
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0660"
+  loop: "{{ django_log_files }}"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+
+
+##
+# LOG ROTATION
+#
+# Configure log rotation for the log files.
+# Log retention policy is 1 month online and 1 year offline.
+##
+- name: install LogRotate
+  ansible.builtin.package:
+    name: logrotate
+    state: present
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+- name: define log rotation for the logs
+  ansible.builtin.template:
+    src: logrotate.j2
+    dest: "/etc/logrotate.d/{{ django_app }}"
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+
+
+##
+# APPLICATION DIRECTORIES
+#
+# Create directories needed by the application
+##
+- name: create application directories
+  ansible.builtin.file:
+    path: "{{ django_app_path }}/{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner|default(django_apache_user) }}"
+    group: "{{ item.group|default(devops_group)|default('adm') }}"
+    mode: "{{ item.mode|default('0775') }}"
+  loop: "{{ django_directories }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+
+
+##
+# Setup the database
+##
+- name: create the database
+  community.mysql.mysql_db:
+    name: "{{ django_db_name }}"
+    state: present
+  register: _django_mysql_db_created
+  become: yes
+  tags:
+    - django_install
+
+- name: create the user and grant permissions
+  community.mysql.mysql_user:
+    user: "{{ django_db_user }}"
+    password: "{{ django_db_password }}"
+    host: localhost
+    priv: "{{ django_db_name }}.*:ALL"
+    state: present
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+- name: ensure the database isn't read only
+  community.mysql.mysql_variables:
+    variable: read_only
+    value: 0
+  register: _django_mysql_read_only_fix
+  become: yes
+  changed_when: _django_mysql_read_only_fix.msg == "Variable change succeeded prev_value=ON"
+  tags:
+    - django_install
+
+- name: create the database schema
+  community.general.django_manage:
+    app_path: "{{ django_app_path }}"
+    command: migrate
+    virtualenv: "{{ django_virtualenv_path }}"
+  when: _django_mysql_db_created is changed
+  tags:
+    - django_install
+
+
+
+##
+# Verify the application settings
+##
+- name: check application settings
+  community.general.django_manage:
+    app_path: "{{ django_app_path }}"
+    command: check
+    virtualenv: "{{ django_virtualenv_path }}"
+
+
+
+##
+# Install the fixtures
+##
+- name: find the rebuilddb script
+  ansible.builtin.stat:
+    path: "{{ django_app_path }}/rebuilddb.sh"
+  register: _django_rebuilddb
+  when: mysql_db_created.changed == true
+  tags:
+    - django_install
+    - django_rebuilddb
+
+- name: install the fixtures
+  ansible.builtin.shell:
+    argv:
+      - "{{ django_app_path }}/rebuilddb.sh"
+      - "{{ django_lookup_data }}"
+      - "{{ django_demo_data }}"
+  when: _django_mysql_db_created is changed and _django_rebuilddb.stat.exists
+  tags:
+    - django_install
+    - django_rebuilddb`
+
+- name: migrate database schema changes
+  community.general.django_manage:
+    app_path: "{{ django_app_path }}"
+    command: migrate
+    virtualenv: "{{ django_virtualenv_path }}"
+  notify: Django Restart uWSGI
+  tags:
+    - django_deploy
+    - django_install
+    - django_rebuilddb
+
+
+
+##
+# Collect all the supporting files
+##
+- name: collect the static files
+  community.general.django_manage:
+    app_path: "{{ django_app_path }}"
+    command: collectstatic
+    virtualenv: "{{ django_virtualenv_path }}"
+  notify: Django Restart uWSGI
+  tags:
+    - django_deploy
+    - django_install
+
+- name: create the media directory
+  ansible.builtin.file:
+    path: "{{ django_app_path }}/media"
+    state: directory
+    owner: "{{ django_apache_user }}"
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0775"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
+
+
+##
+# Install the cron jobs
+##
+- name: setup the cron jobs
+  ansible.builtin.template:
+    src: cronjobs.j2
+    dest: "/etc/cron.d/{{ django_app }}"
+  become: yes
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+
+
+##
+# Setup the application in the Apache virtualhost
+##
+- name: setup the Apache virtualhost subsite
+  ansible.builtin.template:
+    src: "{{ django_vhost_template }}"
+    dest: "/etc/apache2/subsites/{{ django_hostname }}.{{ django_domain }}-ssl/{{ django_app }}.conf"
+  become: yes
+  notify: Django Restart Apache
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+

@@ -1,0 +1,18 @@
+# Installation-specific and security-related Django settings for {{ django_app }}
+
+
+# Used to make complete urls where needed
+ABSOLUTE_BASE_URL = 'https://{{ django_hostname }}.{{ django_domain }}'
+
+
+DATABASES = {
+    'default': {
+        'ENGINE': '{{ django_db_engine }}',
+        'NAME': '{{ django_db_name }}',
+        'USER': '{{ django_db_user }}',
+        'PASSWORD': '{{ django_db_password }}',
+        'HOST': '{{ django_db_host }}',
+        'PORT': '{{ django_db_port }}',
+    },
+}
+
