@@ -33,13 +33,7 @@ django_dependencies:
 
 # Packages
 django_app_package: {}
-### TODO: confirm and fully spec out the standard packages
-django_standard_packages:
-  - name: django-pennstate
-    repo: par117/django-pennstate.git
-  - name: piko_base
-    repo: educational-equity/piko_base.git
-django_custom_packages: []
+django_packages: []
 
 # Fixtures
 django_demo_data: "no"

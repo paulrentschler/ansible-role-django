@@ -111,8 +111,7 @@
     dest: "{{ django_src_path }}/{{ item.name }}"
     version: "{% if item.revision is defined %}{{ item.revision }}{% elif django_environment == 'production' %}master{% else %}develop{% endif %}"
     accept_hostkey: yes
-  ### TODO: not sure flatten will work here
-  loop: "{{ django_standard_packages + django_custom_packages | flatten(levels=1) }}"
+  loop: "{{ django_packages | flatten(levels=1) }}"
   loop_control:
     label: "{{ item.repo }}"
   notify: Django Restart uWSGI
