@@ -444,6 +444,9 @@
   ansible.builtin.template:
     src: "{{ django_vhost_template }}"
     dest: "/etc/apache2/subsites/{{ django_hostname }}.{{ django_domain }}-ssl/{{ django_app }}.conf"
+    owner: root
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0664"
   become: yes
   notify: Django Restart Apache
   tags:
@@ -451,13 +454,14 @@
     - django_deploy
     - django_install
 
-### TODO: finish this!!
 - name: configure uWSGI
   ansible.builtin.template:
-    src: ""
-    dest: ""
+    src: "uwsgi_app.j2"
+    dest: "/etc/uwsgi-emperor/apps/{{ django_app }}.ini"
+    owner: root
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0664"
   become: yes
-  notify: Django Restart uWSGI
   tags:
     - django_config
     - django_deploy

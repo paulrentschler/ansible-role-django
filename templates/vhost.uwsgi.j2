@@ -27,18 +27,19 @@
     # Indicate which environment the system is functioning in
     SetEnv {{ django_app|upper }}_ENVIRONMENT {{ django_environment }}
 
-    # uWSGI hosting for Django application
+    # WSGI hosting for Django application via uWSGI
+    <IfModule mod_proxy.c>
+        ProxyRequests Off
+        <Proxy *>
+            AddDefaultCharset off
+            Require all granted
+        </Proxy>
+        ProxyVia On
+    </IfModule>
 
-    ### TODO: refactor!!!
+    RewriteRule ^{{ django_url }}$    {{ django_url }}/    [R=permanent,NC,L]
 
-    #WSGIDaemonProcess {{ django_app }} user=www-data group=www-data threads=5 python-path="{{ django_app_path }}:{{ django_virtualenv_path }}/lib/python2.7/site-packages"
-    #WSGIScriptAlias {{ django_url }} {{ django_app_path }}/wsgi.py{{ django_url }}
-    #<Directory {{ django_app_path }}>
-    #    WSGIProcessGroup {{ django_app }}
-    #    WSGIApplicationGroup %{GLOBAL}
-    #    WSGIPassAuthorization on
+    ProxyPass {{ django_url }}/static !
+    ProxyPass {{ django_url }}/media !
+    ProxyPass {{ django_url }} unix:/tmp/{{ django_app }}.sock|uwsgi://uwsgi-uds-{{ django_app }}/
 
-    #    <Files wsgi.py>
-    #        Require all granted
-    #    </Files>
-    #</Directory>

@@ -1,0 +1,26 @@
+#
+# {{ ansible_managed }}
+#
+# uWSGI application configuration for {{ django_app|title }}
+#
+
+[uwsgi]
+project = {{ django_app }}
+base = {{ django_virtualenv_path }}
+
+# Django app base directory
+chdir = {{ django_app_path }}
+
+# Virtualenv
+home = %(base)
+
+# Django's wsgi file
+module = wsgi:application
+
+master = true
+processes = 10
+
+socket = /tmp/%(project).sock
+# chmod-socket = 666
+vacuum = true
+
