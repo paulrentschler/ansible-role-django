@@ -4,7 +4,7 @@
 
 # Application
 django_app: ""
-django_unit: ""
+# django_unit: ""
 django_deploy_key: ""
 
 # Installation paths
@@ -15,24 +15,33 @@ django_install_dir: "{{ django_app }}"
 django_virtualenv_path: "/opt/{{ django_install_dir }}"
 django_app_path: "{{ django_virtualenv_path }}/app"
 django_src_path: "{{ django_virtualenv_path }}/src"
-django_url: "/{{ django_unit }}/{{ django_app }}"
+# django_url: "/{{ django_unit }}/{{ django_app }}"
+django_url: "/{{ django_app }}"
 
 # Environment
 #   Valid values: development, demo, production
 #   Determines how the site behaves and messages that are repesented to the user
 django_environment: production
 
+# OS package dependencies
+django_dependencies:
+  - logrotate
+  - python-pip
+  ### NOTE: needed for Python3 support
+  # - python3-pip
+  # - python3-venv
+
 # Packages
 django_app_package: {}
+### TODO: confirm and fully spec out the standard packages
 django_standard_packages:
   - name: django-pennstate
     repo: par117/django-pennstate.git
-  - name: django_base
-    repo: educational-equity/django_base.git
+  - name: piko_base
+    repo: educational-equity/piko_base.git
 django_custom_packages: []
 
 # Fixtures
-django_lookup_data: "yes"
 django_demo_data: "no"
 
 # Logs
@@ -40,7 +49,13 @@ django_log_files:
   - piko.log
 
 # Directories to create
-django_directories: []
+django_directories:
+  - name: media directory
+    path: media
+
+# Settings
+django_cronjobs_template: "cronjobs.j2"
+django_settings_local_template: "settings_local.py.j2"
 
 # Database parameters
 django_db_engine: "django.db.backends.mysql"

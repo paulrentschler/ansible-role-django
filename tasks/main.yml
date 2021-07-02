@@ -3,16 +3,23 @@
 
 
 ##
-# Create the virtual environment
+# Install the OS dependencies
 ##
-- name: install pip
-  ansible.builtin.package:
-    name: python-pip
+- name: install OS dependencies
+  package:
+    name: "{{ item }}"
     state: present
+    update_cache: yes
+  loop: "{{ django_dependencies|flatten() }}"
   become: yes
   tags:
     - django_install
 
+
+
+##
+# Create the virtual environment
+##
 - name: install virtualenv
   ansible.builtin.pip:
     name: virtualenv
@@ -74,31 +81,6 @@
 
 
 ##
-# Install the dependencies
-##
-- name: install the dependencies
-  ansible.builtin.package:
-    name: "{{ item }}"
-    state: present
-    update_cache: yes
-  loop:
-    - build-essential
-    - python-dev
-    - libmysqlclient-dev
-    - python-mysqldb
-    - libjpeg-dev
-    - libz-dev
-    - libldap2-dev
-    - libsasl2-dev
-  become: yes
-  tags:
-    - django_config
-    - django_deploy
-    - django_install
-
-
-
-##
 # Install the code
 ##
 - name: establish the .ssh directory
@@ -111,9 +93,9 @@
     - django_config
     - django_install
 
-- name: upload the deploy key
+- name: set the deploy key
   ansible.builtin.copy:
-    src: "{{ django_deploy_key }}"
+    content: "{{ django_deploy_key }}"
     dest: ~/.ssh/id_rsa
     mode: "0400"
   tags:
@@ -129,7 +111,8 @@
     dest: "{{ django_src_path }}/{{ item.name }}"
     version: "{% if item.revision is defined %}{{ item.revision }}{% elif django_environment == 'production' %}master{% else %}develop{% endif %}"
     accept_hostkey: yes
-  loop: "{{ django_standard_packages + django_custom_packages }}"
+  ### TODO: not sure flatten will work here
+  loop: "{{ django_standard_packages + django_custom_packages | flatten(levels=1) }}"
   loop_control:
     label: "{{ item.repo }}"
   notify: Django Restart uWSGI
@@ -145,7 +128,7 @@
     extra_args: "-e"
     virtualenv: "{{ django_virtualenv_path }}"
     state: present
-  loop: "{{ _django_gitclone.results }}"
+  loop: "{{ _django_gitclone.results | flatten(levels=1) }}"
   loop_control:
     label: "{{ item.item.name }}"
   when: item.changed
@@ -208,23 +191,15 @@
 
 - name: create the local settings file
   ansible.builtin.template:
-    src: settings_local.py.j2
+    src: "{{ django_settings_local_template }}"
     dest: "{{ django_app_path }}/settings_local.py"
     backup: yes
     owner: "{{ devops_user|default(ansible_user) }}"
     group: "{{ devops_group|default('adm') }}"
     mode: "0664"
-  when: (_django_local_settings.stat.exists and overwrite_local_settings is defined) or not _django_local_settings.stat.exists
-  notify: Django Restart uWSGI
+  when: (_django_local_settings.stat.exists and overwrite_local_settings is defined and overwrite_local_settings) or not _django_local_settings.stat.exists
   become: yes
-  tags:
-    - django_config
-    - django_deploy
-    - django_install
-
-- name: update local settings
-  ansible.builtin.debug: 'msg="Edit {{ django_app_path }}/settings_local.py to include necessary passwords."'
-  when: (_django_local_settings.stat.exists and overwrite_local_settings is defined) or not _django_local_settings.stat.exists
+  notify: Django Restart uWSGI
   tags:
     - django_config
     - django_deploy
@@ -233,13 +208,13 @@
 
 
 ##
-# LOGS
+# Logs
 ##
 - name: create the logs directory
   ansible.builtin.file:
     path: "{{ django_app_path }}/logs"
     state: directory
-    owner: "{{ django_apache_user }}"
+    owner: "{{ apache_user }}"
     group: "{{ devops_group|default('adm') }}"
     mode: "0770"
   become: yes
@@ -251,7 +226,7 @@
   ansible.builtin.file:
     path: "{{ django_app_path }}/logs/archive"
     state: directory
-    owner: "{{ django_apache_user }}"
+    owner: "{{ apache_user }}"
     group: "{{ devops_group|default('adm') }}"
     mode: "0770"
   become: yes
@@ -263,7 +238,7 @@
   ansible.builtin.file:
     path: "{{ django_app_path }}/logs/{{ item }}"
     state: touch
-    owner: "{{ django_apache_user }}"
+    owner: "{{ apache_user }}"
     group: "{{ devops_group|default('adm') }}"
     mode: "0660"
   loop: "{{ django_log_files }}"
@@ -273,21 +248,7 @@
     - django_install
 
 
-
-##
-# LOG ROTATION
-#
-# Configure log rotation for the log files.
-# Log retention policy is 1 month online and 1 year offline.
-##
-- name: install LogRotate
-  ansible.builtin.package:
-    name: logrotate
-    state: present
-  become: yes
-  tags:
-    - django_config
-    - django_install
+## Configure log rotation for the log files
 
 - name: define log rotation for the logs
   ansible.builtin.template:
@@ -304,15 +265,13 @@
 
 
 ##
-# APPLICATION DIRECTORIES
-#
 # Create directories needed by the application
 ##
 - name: create application directories
   ansible.builtin.file:
     path: "{{ django_app_path }}/{{ item.path }}"
     state: directory
-    owner: "{{ item.owner|default(django_apache_user) }}"
+    owner: "{{ item.owner|default(apache_user) }}"
     group: "{{ item.group|default(devops_group)|default('adm') }}"
     mode: "{{ item.mode|default('0775') }}"
   loop: "{{ django_directories }}"
@@ -329,6 +288,7 @@
 # Setup the database
 ##
 - name: create the database
+  ### TODO: this might need to be done differently
   community.mysql.mysql_db:
     name: "{{ django_db_name }}"
     state: present
@@ -338,6 +298,7 @@
     - django_install
 
 - name: create the user and grant permissions
+  ### TODO: this might need to be done differently
   community.mysql.mysql_user:
     user: "{{ django_db_user }}"
     password: "{{ django_db_password }}"
@@ -350,6 +311,7 @@
     - django_install
 
 - name: ensure the database isn't read only
+  ### TODO: this might need to be done differently
   community.mysql.mysql_variables:
     variable: read_only
     value: 0
@@ -369,15 +331,18 @@
     - django_install
 
 
+## Register any global permissions
 
-##
-# Verify the application settings
-##
-- name: check application settings
-  community.general.django_manage:
-    app_path: "{{ django_app_path }}"
-    command: check
-    virtualenv: "{{ django_virtualenv_path }}"
+### TODO: deprecate this!
+- name: register global permissions
+  django_manage:
+    app_path: "{{ elba_app_path }}"
+    command: "globalperms"
+    virtualenv: "{{ elba_virtualenv_path }}"
+  notify: Django Restart uWSGI
+  tags:
+    - elba_deploy
+    - elba_install
 
 
 
@@ -388,7 +353,7 @@
   ansible.builtin.stat:
     path: "{{ django_app_path }}/rebuilddb.sh"
   register: _django_rebuilddb
-  when: mysql_db_created.changed == true
+  when: _django_mysql_db_created is changed
   tags:
     - django_install
     - django_rebuilddb
@@ -397,12 +362,15 @@
   ansible.builtin.shell:
     argv:
       - "{{ django_app_path }}/rebuilddb.sh"
-      - "{{ django_lookup_data }}"
+      - "no"
       - "{{ django_demo_data }}"
   when: _django_mysql_db_created is changed and _django_rebuilddb.stat.exists
   tags:
     - django_install
     - django_rebuilddb`
+
+
+## Apply database schema changes
 
 - name: migrate database schema changes
   community.general.django_manage:
@@ -414,6 +382,28 @@
     - django_deploy
     - django_install
     - django_rebuilddb
+
+
+## Update the system user
+
+- name: update system user
+  django_manage:
+    app_path: "{{ django_app_path }}"
+    command: "systemuser"
+    virtualenv: "{{ django_virtualenv_path }}"
+  tags:
+    - django_deploy
+
+
+## Update the user roles
+
+- name: update user roles
+  django_manage:
+    app_path: "{{ django_app_path }}"
+    command: "roles"
+    virtualenv: "{{ django_virtualenv_path }}"
+  tags:
+    - django_deploy
 
 
 
@@ -430,18 +420,6 @@
     - django_deploy
     - django_install
 
-- name: create the media directory
-  ansible.builtin.file:
-    path: "{{ django_app_path }}/media"
-    state: directory
-    owner: "{{ django_apache_user }}"
-    group: "{{ devops_group|default('adm') }}"
-    mode: "0775"
-  become: yes
-  tags:
-    - django_config
-    - django_install
-
 
 
 ##
@@ -449,18 +427,19 @@
 ##
 - name: setup the cron jobs
   ansible.builtin.template:
-    src: cronjobs.j2
+    src: "{{ django_cronjobs_template }}"
     dest: "/etc/cron.d/{{ django_app }}"
   become: yes
   tags:
     - django_config
+    - django_cron
     - django_deploy
     - django_install
 
 
 
 ##
-# Setup the application in the Apache virtualhost
+# Setup the application hosting
 ##
 - name: setup the Apache virtualhost subsite
   ansible.builtin.template:
@@ -473,4 +452,43 @@
     - django_deploy
     - django_install
 
+### TODO: finish this!!
+- name: configure uWSGI
+  ansible.builtin.template:
+    src: ""
+    dest: ""
+  become: yes
+  notify: Django Restart uWSGI
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+
+
+##
+# Verify the application settings
+##
+- name: check application settings
+  community.general.django_manage:
+    app_path: "{{ django_app_path }}"
+    command: check
+    virtualenv: "{{ django_virtualenv_path }}"
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+
+
+##
+# Remove the deploy key
+##
+- name: remove the deploy key
+  ansible.builtin.file:
+    path: ~/.ssh/id_rsa
+    state: absent
+  tags:
+    - django_deploy
+    - django_install
 

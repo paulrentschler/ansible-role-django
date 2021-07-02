@@ -2,18 +2,19 @@
 # Handlers for the role
 
 - name: Django Restart Apache
-  service:
+  ansible.builtin.service:
     name: apache2
     state: restarted
   become: yes
 
 - name: Django Restart WSGI
-  file:
+  ansible.builtin.file:
     path: "{{ django_app_path }}/wsgi.py"
     state: touch
 
 - name: Django Restart uWSGI
-  file:
+  ansible.builtin.file:
+    ### TODO: this needs to be the file in the uWSGI config directory
     path: "{{ django_app_path }}/wsgi.py"
     state: touch
 

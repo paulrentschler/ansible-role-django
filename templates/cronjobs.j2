@@ -19,5 +19,5 @@ MAILTO=root
 # *   *  *  *  *         username             command to be executed
 
 ### Clear the session data at 5:05am each day
-  5   5  *  *  *         {{ django_apache_user }}    {{ django_virtualenv_path }}/bin/python {{ django_app_path }}/manage.py clearsessions
+  5   5  *  *  *         {{ apache_user }}    {{ django_virtualenv_path }}/bin/python {{ django_app_path }}/manage.py clearsessions
 

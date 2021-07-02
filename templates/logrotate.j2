@@ -2,7 +2,7 @@
 # {{ ansible_managed }}
 #
 # Rotates the {{ django_app }} log files
-# Log retention policy is 1 month online and 1 year offline.
+# Log retention policy is 1 month readily available and 1 year archived.
 #
 
 {{ django_app_path }}/logs/*.log {
@@ -29,6 +29,7 @@
 
 # run the pre and post rotation scripts against all the matched files at once
     sharedscripts
+    ### TODO: change this to work with uWSGI
     postrotate
         touch {{ django_app_path }}/wsgi.py
     endscript

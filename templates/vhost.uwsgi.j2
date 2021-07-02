@@ -1,0 +1,44 @@
+#
+# {{ ansible_managed }}
+#
+# Apache configuration directives necessary for {{ django_app|title }}
+#
+# These directives are intended to be included into a larger Apache virtual
+# host configuration file for the server hosting the application.
+#
+
+
+###
+# application-specific configuration
+###
+    # Static hosted files
+    Alias {{ django_url }}/static/ {{ django_app_path }}/static/
+    <Directory {{ django_app_path }}/static>
+        Require all granted
+    </Directory>
+
+    # Media files (uploaded by users)
+    Alias {{ django_url }}/media/ {{ django_app_path }}/media/
+    <Directory {{ django_app_path }}/media>
+        Require all granted
+    </Directory>
+
+
+    # Indicate which environment the system is functioning in
+    SetEnv {{ django_app|upper }}_ENVIRONMENT {{ django_environment }}
+
+    # uWSGI hosting for Django application
+
+    ### TODO: refactor!!!
+
+    #WSGIDaemonProcess {{ django_app }} user=www-data group=www-data threads=5 python-path="{{ django_app_path }}:{{ django_virtualenv_path }}/lib/python2.7/site-packages"
+    #WSGIScriptAlias {{ django_url }} {{ django_app_path }}/wsgi.py{{ django_url }}
+    #<Directory {{ django_app_path }}>
+    #    WSGIProcessGroup {{ django_app }}
+    #    WSGIApplicationGroup %{GLOBAL}
+    #    WSGIPassAuthorization on
+
+    #    <Files wsgi.py>
+    #        Require all granted
+    #    </Files>
+    #</Directory>
