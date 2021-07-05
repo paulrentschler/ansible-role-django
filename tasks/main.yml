@@ -290,7 +290,7 @@
   community.mysql.mysql_db:
     name: "{{ django_db_name }}"
     state: present
-    login_unix_socket: "{{ mysql_socket }}"
+    login_unix_socket: "{{ django_db_socket }}"
   register: _django_mysql_db_created
   become: yes
   delegate_to: "{{ django_db_host }}"
@@ -301,10 +301,12 @@
   community.mysql.mysql_user:
     user: "{{ django_db_user }}"
     password: "{{ django_db_password }}"
-    host: "{{ django_db_host|default('localhost') }}"
+    host: "{% if django_db_port != '' %}{{ ansible_host|default('localhost') }}{% else %}localhost{% endif %}"
     priv: "{{ django_db_name }}.*:ALL"
+    tls_requires:
+      ssl:
     state: present
-    login_unix_socket: "{{ mysql_socket }}"
+    login_unix_socket: "{{ django_db_socket }}"
   become: yes
   delegate_to: "{{ django_db_host }}"
   tags:

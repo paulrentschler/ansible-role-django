@@ -56,4 +56,4 @@ django_db_user: "{{ django_app }}"
 django_db_password: "{{ django_app }}user"
 django_db_host: ""
 django_db_port: ""
-
+django_db_socket: "/var/run/mysqld/mysqld.sock"
