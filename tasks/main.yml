@@ -41,6 +41,18 @@
     - django_config
     - django_install
 
+- name: create the app directory
+  ansible.builtin.file:
+    path: "{{ django_app_path }}"
+    state: directory
+    owner: "{{ devops_user|default(ansible_user) }}"
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0775"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
 - name: create the src directory
   ansible.builtin.file:
     path: "{{ django_src_path }}"
@@ -149,6 +161,17 @@
     version: "{% if django_app_package.revision is defined %}{{ django_app_package.revision }}{% elif django_environment == 'production' %}master{% else %}develop{% endif %}"
     accept_hostkey: yes
   notify: Django Restart uWSGI
+  tags:
+    - django_deploy
+    - django_install
+
+- name: disable filemode tracking
+  community.general.git_config:
+    name: core.filemode
+    scope: local
+    repo: "{{ django_app_path }}"
+    value: "false"
+    state: present
   tags:
     - django_deploy
     - django_install
