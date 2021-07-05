@@ -4,7 +4,6 @@
 
 # Application
 django_app: ""
-# django_unit: ""
 django_deploy_key: ""
 
 # Installation paths
@@ -15,7 +14,6 @@ django_install_dir: "{{ django_app }}"
 django_virtualenv_path: "/opt/{{ django_install_dir }}"
 django_app_path: "{{ django_virtualenv_path }}/app"
 django_src_path: "{{ django_virtualenv_path }}/src"
-# django_url: "/{{ django_unit }}/{{ django_app }}"
 django_url: "/{{ django_app }}"
 
 # Environment
