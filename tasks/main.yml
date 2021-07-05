@@ -17,13 +17,14 @@
 
 
 
-##
+#
 # Create the virtual environment
 ##
 - name: install virtualenv
   ansible.builtin.pip:
     name: virtualenv
     state: present
+    executable: "/usr/bin/pip"
   become: yes
   tags:
     - django_install
@@ -125,8 +126,10 @@
     name: "{{ django_src_path }}/{{ item.item.name }}"
     editable: true
     extra_args: "-e"
-    virtualenv: "{{ django_virtualenv_path }}"
     state: present
+    virtualenv: "{{ django_virtualenv_path }}"
+    virtualenv_command: "virtualenv"
+    virtualenv_python: "python2.7"
   loop: "{{ _django_gitclone.results | flatten(levels=1) }}"
   loop_control:
     label: "{{ item.item.name }}"
@@ -158,6 +161,8 @@
     requirements: "{{ django_app_path }}/requirements.txt"
     state: present
     virtualenv: "{{ django_virtualenv_path }}"
+    virtualenv_command: "virtualenv"
+    virtualenv_python: "python2.7"
     virtualenv_site_packages: no
   become: yes
   notify: Django Restart uWSGI
