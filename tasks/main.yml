@@ -513,6 +513,25 @@
 
 
 ##
+# Update firewall rules
+##
+- name: allow external submissions through the firewall
+  ufw:
+    rule: allow
+    port: 443
+    src: "{{ item.ip }}"
+  loop: "{{ django_external_submissions }}"
+  loop_control:
+    label: "{{ item.name|default(item.ip) }}"
+  become: yes
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+
+
+##
 # Verify the application settings
 ##
 - name: check application settings

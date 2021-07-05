@@ -44,10 +44,15 @@ django_log_files:
 django_directories:
   - name: media directory
     path: media
+  - name: static directory
+    path: static
 
 # Settings
 django_cronjobs_template: "cronjobs.j2"
 django_settings_local_template: "settings_local.py.j2"
+
+# External submissions
+django_external_submissions: []
 
 # Database parameters
 django_db_engine: "django.db.backends.mysql"
