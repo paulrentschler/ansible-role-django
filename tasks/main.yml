@@ -129,15 +129,16 @@
 
 ### Install Python packages under development
 
-- name: clone/update standard and custom packages
+- name: clone/update packages
   ansible.builtin.git:
-    repo: "ssh://git@git.psu.edu/{{ item.repo }}"
+    repo: "ssh://{{ item.server|default('git@git.psu.edu') }}/{{ item.repo }}"
     dest: "{{ django_src_path }}/{{ item.name }}"
     version: "{% if item.revision is defined %}{{ item.revision }}{% elif django_environment == 'production' %}master{% else %}develop{% endif %}"
     accept_hostkey: yes
   loop: "{{ django_packages | flatten(levels=1) }}"
   loop_control:
     label: "{{ item.repo }}"
+    pause: 5
   notify: Django Restart uWSGI
   register: _django_gitclone
   tags:
@@ -167,7 +168,7 @@
 
 - name: install/update application package
   ansible.builtin.git:
-    repo: "ssh://git@git.psu.edu/{{ django_app_package.repo }}"
+    repo: "ssh://{{ django_app_package.server|default('git@git.psu.edu') }}/{{ django_app_package.repo }}"
     dest: "{{ django_app_path }}"
     version: "{% if django_app_package.revision is defined %}{{ django_app_package.revision }}{% elif django_environment == 'production' %}master{% else %}develop{% endif %}"
     accept_hostkey: yes
