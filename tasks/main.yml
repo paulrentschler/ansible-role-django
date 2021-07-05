@@ -83,6 +83,17 @@
   tags:
     - django_deploy
 
+- name: create the predeploy.sh script
+  ansible.builtin.file:
+    path: "{{ django_virtualenv_path }}/predeploy.sh"
+    state: touch
+    owner: "{{ devops_user|default(ansible_user) }}"
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0664"
+  when: not _django_predeploy_file.stat.exists|default(False)|bool
+  tags:
+    - django_deploy
+
 - name: make predeploy.sh non-executable
   ansible.builtin.file:
     path: "{{ django_virtualenv_path }}/predeploy.sh"
