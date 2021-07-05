@@ -378,13 +378,13 @@
 ### TODO: deprecate this!
 - name: register global permissions
   django_manage:
-    app_path: "{{ elba_app_path }}"
+    app_path: "{{ django_app_path }}"
     command: "globalperms"
-    virtualenv: "{{ elba_virtualenv_path }}"
+    virtualenv: "{{ django_virtualenv_path }}"
   notify: Django Restart uWSGI
   tags:
-    - elba_deploy
-    - elba_install
+    - django_deploy
+    - django_install
 
 
 
@@ -486,7 +486,7 @@
 - name: setup the Apache virtualhost subsite
   ansible.builtin.template:
     src: "{{ django_vhost_template }}"
-    dest: "/etc/apache2/subsites/{{ django_hostname }}.{{ django_domain }}-ssl/{{ django_app }}.conf"
+    dest: "/etc/apache2/apps/{{ django_hostname }}.{{ django_domain }}-ssl/{{ django_app }}.conf"
     owner: root
     group: "{{ devops_group|default('adm') }}"
     mode: "0664"
