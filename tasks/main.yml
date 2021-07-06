@@ -426,24 +426,14 @@
     - django_rebuilddb
 
 
-## Update the system user
+## Run extra management commands
 
-- name: update system user
+- name: run extra management commands
   django_manage:
     app_path: "{{ django_app_path }}"
-    command: "systemuser"
+    command: "{{ item }}"
     virtualenv: "{{ django_virtualenv_path }}"
-  tags:
-    - django_deploy
-
-
-## Update the user roles
-
-- name: update user roles
-  django_manage:
-    app_path: "{{ django_app_path }}"
-    command: "roles"
-    virtualenv: "{{ django_virtualenv_path }}"
+  loop: "{{ django_extra_management_commands }}"
   tags:
     - django_deploy
 
@@ -518,7 +508,7 @@
 - name: allow external submissions through the firewall
   ufw:
     rule: allow
-    port: 443
+    port: "443"
     src: "{{ item.ip }}"
   loop: "{{ django_external_submissions }}"
   loop_control:

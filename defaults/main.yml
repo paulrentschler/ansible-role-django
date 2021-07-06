@@ -54,6 +54,9 @@ django_settings_local_template: "settings_local.py.j2"
 # External submissions
 django_external_submissions: []
 
+# Extra management commands
+django_extra_management_commands: []
+
 # Database parameters
 django_db_engine: "django.db.backends.mysql"
 django_db_name: "{{ django_app }}"
