@@ -462,6 +462,7 @@
     src: "{{ django_cronjobs_template }}"
     dest: "/etc/cron.d/{{ django_app }}"
   become: yes
+  when: django_cronjobs_template is defined and django_cronjobs_template != ""
   tags:
     - django_config
     - django_cron
