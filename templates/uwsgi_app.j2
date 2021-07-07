@@ -20,7 +20,7 @@ module = wsgi:application
 master = true
 processes = 10
 
-socket = /tmp/%(project).sock
+socket = {{ uwsgi_socket_path|default('/tmp') }}/%(project).sock
 # chmod-socket = 666
 vacuum = true
 
