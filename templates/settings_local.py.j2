@@ -13,6 +13,11 @@ DATABASES = {
         'PASSWORD': '{{ django_db_password }}',
         'HOST': '{{ django_db_host }}',
         'PORT': '{{ django_db_port }}',
+{% if 'mysql' in django_db_engine %}
+        'OPTIONS': {
+            'charset': u'utf8mb4',
+        },
+{% endif %}
     },
 }
 
