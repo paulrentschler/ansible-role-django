@@ -25,7 +25,7 @@ socket = {{ uwsgi_socket_path|default('/tmp') }}/%(project).sock
 vacuum = true
 
 # The default 4096 buffer size appears to be too small for Django apps
-buffer = 8192
+buffer-size = 8192
 
 # specify the Python plugin
 plugin = {% if uwsgi_use_python3|default('yes')|bool %}python3{% else %}python{% endif %}
