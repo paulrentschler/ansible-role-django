@@ -373,20 +373,6 @@
     - django_install
 
 
-## Register any global permissions
-
-### TODO: deprecate this!
-- name: register global permissions
-  django_manage:
-    app_path: "{{ django_app_path }}"
-    command: "globalperms"
-    virtualenv: "{{ django_virtualenv_path }}"
-  notify: Django Restart uWSGI
-  tags:
-    - django_deploy
-    - django_install
-
-
 
 ##
 # Install the fixtures
