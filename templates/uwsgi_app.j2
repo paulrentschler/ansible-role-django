@@ -18,7 +18,7 @@ home = %(base)
 module = wsgi:application
 
 master = true
-processes = 10
+processes = {{ django_uwsgi_processes|default('10') }}
 
 socket = {{ uwsgi_socket_path|default('/tmp') }}/%(project).sock
 # chmod-socket = 666
