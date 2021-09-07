@@ -244,6 +244,18 @@
     - django_deploy
     - django_install
 
+- name: set the dev environment variable
+  ansible.builtin.template:
+    src: "environment.j2"
+    dest: "/etc/profile.d/{{ django_app|lower }}_env.sh"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: yes
+  tags:
+    - django_config
+    - django_install
+
 
 
 ##
