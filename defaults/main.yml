@@ -20,6 +20,7 @@ django_url: "/{{ django_app }}"
 #   Valid values: development, demo, production
 #   Determines how the site behaves and messages that are repesented to the user
 django_environment: production
+django_python_version: 2
 
 # OS package dependencies
 django_dependencies:
