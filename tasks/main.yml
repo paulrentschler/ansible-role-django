@@ -375,7 +375,7 @@
     login_unix_socket: "{{ django_db_socket }}"
   register: _django_mysql_db_created
   become: yes
-  delegate_to: "{{ django_db_host }}"
+  delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
   tags:
     - django_install
 
@@ -390,7 +390,7 @@
     state: present
     login_unix_socket: "{{ django_db_socket }}"
   become: yes
-  delegate_to: "{{ django_db_host }}"
+  delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
   tags:
     - django_config
     - django_install
