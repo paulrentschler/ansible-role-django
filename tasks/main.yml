@@ -145,7 +145,7 @@
     - django_deploy
     - django_install
 
-- name: install the packages (Python 2)
+- name: install the packages
   ansible.builtin.pip:
     name: "{{ django_src_path }}/{{ item.item.name }}"
     editable: true
@@ -162,22 +162,6 @@
   tags:
     - django_deploy
     - django_install
-
-# - name: install the packages (Python 3)
-#   ansible.builtin.pip:
-#     name: "{{ django_src_path }}/{{ item.item.name }}"
-#     editable: true
-#     extra_args: "-e"
-#     state: present
-#     virtualenv: "{{ django_virtualenv_path }}"
-#   loop: "{{ _django_gitclone.results | flatten(levels=1) }}"
-#   loop_control:
-#     label: "{{ item.item.name }}"
-#   when: item.changed and django_python_version != 2
-#   become: yes
-#   tags:
-#     - django_deploy
-#     - django_install
 
 
 ### Install application package
@@ -207,7 +191,7 @@
 
 ### Finalize the code installation
 
-- name: install the required python libraries (Python 2)
+- name: install the required python libraries
   ansible.builtin.pip:
     requirements: "{{ django_app_path }}/requirements.txt"
     state: present
@@ -215,25 +199,11 @@
     virtualenv_command: "{{ 'virtualenv' if django_python_version == 2 else omit }}"
     virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
     virtualenv_site_packages: no
-  # when: django_python_version == 2
   become: yes
   notify: Django Restart uWSGI
   tags:
     - django_deploy
     - django_install
-
-# - name: install the required python libraries (Python 3)
-#   ansible.builtin.pip:
-#     requirements: "{{ django_app_path }}/requirements.txt"
-#     state: present
-#     virtualenv: "{{ django_virtualenv_path }}"
-#     virtualenv_site_packages: no
-#   when: django_python_version != 2
-#   become: yes
-#   notify: Django Restart uWSGI
-#   tags:
-#     - django_deploy
-#     - django_install
 
 - name: make manage.py executable
   ansible.builtin.file:
