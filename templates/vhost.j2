@@ -84,7 +84,7 @@
 
 {% if apache_use_wsgi|bool %}
     # WSGI hosting for Django application
-    WSGIDaemonProcess {{ django_app }} user=www-data group=www-data threads=5 python-path="{{ django_app_path }}:{{ django_virtualenv_path }}/lib/python2.7/site-packages"
+    WSGIDaemonProcess {{ django_app }} user={{ apache_user }} group={{ apache_group }} threads=5 python-path="{{ django_app_path }}:{{ django_virtualenv_path }}/lib/python2.7/site-packages"
     WSGIScriptAlias {{ django_url }} {{ django_app_path }}/wsgi.py{{ django_url }}
     <Directory {{ django_app_path }}>
         WSGIProcessGroup {{ django_app }}
