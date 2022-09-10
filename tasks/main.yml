@@ -470,6 +470,39 @@
 
 
 ##
+# Setup DjangoQ to run its workers
+##
+- name: create DjangoQ systemd service
+  ansible.builtin.template:
+    src: djangoq.systemd.service.j2
+    dest: "/etc/systemd/system/djangoq_{{ django_app }}.service"
+  become: yes
+  when: django_use_djangoq|default('no')|bool
+  tags:
+    - django_install
+
+- name: setup DjangoQ workers to run on boot up
+  ansible.buildin.systemd:
+    name: djangoq_{{ django_app }}
+    state: started
+    enabled: yes
+  become: yes
+  when: django_use_djangoq|default('no')|bool
+  tags:
+    - django_install
+
+- name: restart DjangoQ workers
+  ansible.builtin.systemd:
+    name: djangoq_{{ django_app }}
+    state: restarted
+  become: yes
+  when: django_use_djangoq|default('no')|bool
+  tags:
+    - django_deploy
+
+
+
+##
 # Setup the application hosting
 ##
 - name: setup the Apache virtualhost subsite

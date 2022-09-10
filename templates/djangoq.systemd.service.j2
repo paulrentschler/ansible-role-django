@@ -1,0 +1,22 @@
+[Unit]
+Description=DjangoQ Qcluster daemon
+After=network.target
+
+[Service]
+User={{ apache_user }}
+Group={{ apache_group }}
+#RuntimeDirectory=example
+#RuntimeDirectoryMode=0755
+PIDFile=/run/qcluster_{{ django_app }}.pid
+WorkingDirectory={{ django_virtualenv_path }}
+EnvironmentFile={{ django_virtualenv_path }}/.env
+ExecStart={{ django_virtualenv_path }}/bin/python manage.py qcluster
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+StandardOutput=file:{{ django_app_path }}/logs/qcluster.std.log
+StandardError=file:{{ django_app_path }}/logs/qcluster.err.log
+
+[Install]
+WantedBy=multi-user.target
+Alias=djangoq_{{ django_app }}.service
