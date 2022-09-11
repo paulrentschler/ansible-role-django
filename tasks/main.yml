@@ -333,6 +333,19 @@
     - django_config
     - django_install
 
+- name: create email directory
+  ansible.builtin.file:
+    path: "{{ django_app_path }}/email"
+    state: directory
+    owner: "{{ apache_user }}"
+    group: "{{ devops_group|default('adm') }}"
+    mode: "0775"
+  become: yes
+  when: django_environment != 'production'
+  tags:
+    - django_config
+    - django_install
+
 
 
 ##
