@@ -358,6 +358,7 @@
     login_unix_socket: "{{ django_db_socket }}"
   register: _django_mysql_db_created
   become: yes
+  when: django_db_engine == 'django.db.backends.mysql'
   delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
   tags:
     - django_install
@@ -373,6 +374,7 @@
     state: present
     login_unix_socket: "{{ django_db_socket }}"
   become: yes
+  when: django_db_engine == 'django.db.backends.mysql'
   delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
   tags:
     - django_config
