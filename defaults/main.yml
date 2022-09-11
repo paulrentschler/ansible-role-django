@@ -7,8 +7,8 @@ django_app: ""
 django_deploy_key: ""
 
 # Installation paths
-django_hostname: students
-django_domain: equity.psu.edu
+django_hostname: ""
+django_domain: ""
 django_vhost_template: vhost.j2
 django_install_dir: "{{ django_app }}"
 django_virtualenv_path: "/opt/{{ django_install_dir }}"
