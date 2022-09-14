@@ -42,9 +42,9 @@
 
 {% if django_api_access is defined and (apache_use_cosign|default('no')|bool or apache_use_azuresso|default('no')|bool) %}
 
-    # API (restricted to only other Ed Equity applications)
-    #     Disable authentication
-    #     Restrict access to only the specified IPs
+    # API access
+    #   - Disable authentication
+    #   - Restrict access to only the specified IPs
     <LocationMatch "^{{ django_api_access.url }}/(.*)$">
 {% if apache_use_cosign|default('no')|bool %}
         SetHandler none
