@@ -494,16 +494,18 @@
   become: yes
   when: django_use_djangoq|default('no')|bool
   tags:
+    - django_config
     - django_install
 
 - name: setup DjangoQ workers to run on boot up
-  ansible.buildin.systemd:
+  ansible.builtin.systemd:
     name: djangoq_{{ django_app }}
     state: started
     enabled: yes
   become: yes
   when: django_use_djangoq|default('no')|bool
   tags:
+    - django_config
     - django_install
 
 - name: restart DjangoQ workers
@@ -513,6 +515,7 @@
   become: yes
   when: django_use_djangoq|default('no')|bool
   tags:
+    - django_config
     - django_deploy
 
 
