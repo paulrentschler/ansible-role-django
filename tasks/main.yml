@@ -155,6 +155,7 @@
   loop_control:
     label: "{{ item.repo }}"
     pause: 5
+  become: yes
   tags:
     - django_deploy
     - django_install
@@ -208,6 +209,7 @@
     scope: system
     value: "{{ django_app_path }}"
     state: present
+  become: yes
   tags:
     - django_deploy
     - django_install
