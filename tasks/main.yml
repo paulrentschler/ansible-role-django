@@ -622,6 +622,7 @@
   loop:
     - "{{ django_app_path }}"
     - "{{ django_src_path }}"
+  become: yes
   tags:
     - django_config
     - django_deploy
