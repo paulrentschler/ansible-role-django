@@ -145,6 +145,20 @@
     - django_deploy
     - django_install
 
+- name: mark the repos safe
+  community.general.git_config:
+    name: safe.directory
+    scope: global
+    value: "{{ django_src_path }}/{{ item.name }}"
+    state: present
+  loop: "{{ django_packages | flatten(levels=1) }}"
+  loop_control:
+    label: "{{ item.repo }}"
+    pause: 5
+  tags:
+    - django_deploy
+    - django_install
+
 - name: install the packages
   ansible.builtin.pip:
     name: "{{ django_src_path }}/{{ item.item.name }}"
@@ -183,6 +197,16 @@
     scope: local
     repo: "{{ django_app_path }}"
     value: "false"
+    state: present
+  tags:
+    - django_deploy
+    - django_install
+
+- name: mark the repo safe
+  community.general.git_config:
+    name: safe.directory
+    scope: global
+    value: "{{ django_app_path }}"
     state: present
   tags:
     - django_deploy
@@ -579,6 +603,25 @@
     app_path: "{{ django_app_path }}"
     command: check
     virtualenv: "{{ django_virtualenv_path }}"
+  tags:
+    - django_config
+    - django_deploy
+    - django_install
+
+
+
+##
+# Fix the file group ownership
+##
+- name: ensure devops has access to all files
+  ansible.builtin.file:
+    dest: "{{ item }}"
+    group: "{{ devops_group }}"
+    mode: "g=w"
+    recurse: yes
+  loop:
+    - "{{ django_app_path }}"
+    - "{{ django_src_path }}"
   tags:
     - django_config
     - django_deploy
