@@ -148,7 +148,7 @@
 - name: mark the repos safe
   community.general.git_config:
     name: safe.directory
-    scope: global
+    scope: system
     value: "{{ django_src_path }}/{{ item.name }}"
     state: present
   loop: "{{ django_packages | flatten(levels=1) }}"
@@ -205,7 +205,7 @@
 - name: mark the repo safe
   community.general.git_config:
     name: safe.directory
-    scope: global
+    scope: system
     value: "{{ django_app_path }}"
     state: present
   tags:
@@ -617,7 +617,7 @@
   ansible.builtin.file:
     dest: "{{ item }}"
     group: "{{ devops_group }}"
-    mode: "g=w"
+    mode: "g+w"
     recurse: yes
   loop:
     - "{{ django_app_path }}"
