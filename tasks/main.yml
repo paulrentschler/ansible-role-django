@@ -221,7 +221,7 @@
   with_items: security_sudo_users
   loop_control:
     loop_var: users_item
-  when: item != devops_user
+  when: users_item != devops_user
   tags:
     - django_deploy
     - django_install
