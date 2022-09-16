@@ -145,20 +145,20 @@
     - django_deploy
     - django_install
 
-- name: mark the repos safe
-  community.general.git_config:
-    name: safe.directory
-    scope: system
-    value: "{{ django_src_path }}/{{ item.name }}"
-    state: present
-  loop: "{{ django_packages | flatten(levels=1) }}"
-  loop_control:
-    label: "{{ item.repo }}"
-    pause: 5
-  become: yes
-  tags:
-    - django_deploy
-    - django_install
+# - name: mark the repos safe
+#   community.general.git_config:
+#     name: safe.directory
+#     scope: system
+#     value: "{{ django_src_path }}/{{ item.name }}"
+#     state: present
+#   loop: "{{ django_packages | flatten(levels=1) }}"
+#   loop_control:
+#     label: "{{ item.repo }}"
+#     pause: 5
+#   become: yes
+#   tags:
+#     - django_deploy
+#     - django_install
 
 - name: install the packages
   ansible.builtin.pip:
@@ -203,13 +203,25 @@
     - django_deploy
     - django_install
 
-- name: mark the repo safe
-  community.general.git_config:
-    name: safe.directory
-    scope: system
-    value: "{{ django_app_path }}"
-    state: present
-  become: yes
+# - name: mark the repo safe
+#   community.general.git_config:
+#     name: safe.directory
+#     scope: system
+#     value: "{{ django_app_path }}"
+#     state: present
+#   become: yes
+#   tags:
+#     - django_deploy
+#     - django_install
+
+
+### Make the repos safe for use by devops users
+- name: make the repos safe for devops users
+  include: saferepos.yml username={{ users_item }}
+  with_items: security_sudo_users
+  loop_control:
+    loop_var: users_item
+  when: item != devops_user
   tags:
     - django_deploy
     - django_install

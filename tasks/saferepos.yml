@@ -1,0 +1,40 @@
+---
+# Mark the project repos safe for devops users to use
+
+
+- name: ensure the .gitconfig file exists
+  ansible.builtin.lineinfile:
+    path: "/home/{{ username }}/.gitconfig"
+    owner: "{{ username }}"
+    mode: "0664"
+    create: yes
+    line: "[safe]"
+  become: yes
+  tags:
+    - django_deploy
+    - django_install
+
+- name: add the source repos to the safe list
+  ansible.builtin.lineinfile:
+    path: "/home/{{ username }}/.gitconfig"
+    owner: "{{ username }}"
+    line: "    directory = {{ django_src_path }}/{{ item.name }}"
+    insertafter: "^\[safe\]\n"
+  loop: "{{ django_packages | flatten(levels=1) }}"
+  loop_control:
+    label: "{{ item.repo }}"
+  become: yes
+  tags:
+    - django_deploy
+    - django_install
+
+- name: add the application repo to the safe list
+  ansible.builtin.lineinfile:
+    path: "/home/{{ username }}/.gitconfig"
+    owner: "{{ username }}"
+    line: "    directory = {{ django_app_path }}"
+    insertafter: "^\[safe\]\n"
+  become: yes
+  tags:
+    - django_deploy
+    - django_install
