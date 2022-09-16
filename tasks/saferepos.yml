@@ -18,8 +18,8 @@
   ansible.builtin.lineinfile:
     path: "/home/{{ username }}/.gitconfig"
     owner: "{{ username }}"
-    line: "    directory = {{ django_src_path }}/{{ item.name }}"
-    insertafter: "^\[safe\]\n"
+    line: '    directory = {{ django_src_path }}/{{ item.name }}'
+    insertafter: '^\[safe\]\n'
   loop: "{{ django_packages | flatten(levels=1) }}"
   loop_control:
     label: "{{ item.repo }}"
@@ -32,8 +32,8 @@
   ansible.builtin.lineinfile:
     path: "/home/{{ username }}/.gitconfig"
     owner: "{{ username }}"
-    line: "    directory = {{ django_app_path }}"
-    insertafter: "^\[safe\]\n"
+    line: '    directory = {{ django_app_path }}'
+    insertafter: '^\[safe\]\n'
   become: yes
   tags:
     - django_deploy
