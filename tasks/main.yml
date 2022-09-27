@@ -10,19 +10,30 @@
 ##
 # Install the OS dependencies
 ##
-- name: install OS dependencies
-  package:
+- name: install OS dependencies (Debian)
+  ansible.builtin.apt:
     name: "{{ item }}"
     state: present
     update_cache: yes
-  loop: "{{ django_dependencies|flatten() }}"
+  loop: "{{ django_dependencies_debian|flatten() }}"
   become: yes
+  when: "ansible_os_family == 'Debian'"
+  tags:
+    - django_install
+
+- name: install OS dependencies (RedHat)
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ django_dependencies_redhat|flatten() }}"
+  become: yes
+  when: "ansible_os_family == 'RedHat'"
   tags:
     - django_install
 
 
 
-#
+##
 # Create the virtual environment
 ##
 - name: install virtualenv
@@ -31,6 +42,7 @@
     state: present
     executable: "/usr/bin/pip"
   become: yes
+  when: django_python_version == 2
   tags:
     - django_install
 
@@ -134,6 +146,17 @@
 
 ### Install Python packages under development
 
+- name: ensure the newest PIP
+  ansible.builtin.pip:
+    name: pip
+    state: latest
+    virtualenv: "{{ django_virtualenv_path }}"
+    virtualenv_command: "{{ '/usr/bin/python3 -m venv' if django_python_version > 2 else omit }}"
+    virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
+  become: yes
+  tags:
+    - django_install
+
 - name: clone/update packages
   ansible.builtin.git:
     repo: "ssh://{{ item.server|default('git@git.psu.edu') }}/{{ item.repo }}"
@@ -157,7 +180,7 @@
     extra_args: "-e"
     state: present
     virtualenv: "{{ django_virtualenv_path }}"
-    virtualenv_command: "{{ 'virtualenv' if django_python_version == 2 else omit }}"
+    virtualenv_command: "{{ '/usr/bin/python3 -m venv' if django_python_version > 2 else omit }}"
     virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
   loop: "{{ _django_gitclone.results | flatten(levels=1) }}"
   loop_control:
@@ -196,7 +219,9 @@
 
 ### Make the repos safe for use by devops users
 - name: make the repos safe for devops users
-  include: saferepos.yml username={{ users_item }}
+  include_tasks: saferepos.yml
+  vars:
+    username: "{{ users_item }}"
   with_items: "{{ security_sudo_users }}"
   loop_control:
     loop_var: users_item
@@ -213,7 +238,7 @@
     requirements: "{{ django_app_path }}/requirements.txt"
     state: present
     virtualenv: "{{ django_virtualenv_path }}"
-    virtualenv_command: "{{ 'virtualenv' if django_python_version == 2 else omit }}"
+    virtualenv_command: "{{ '/usr/bin/python3 -m venv' if django_python_version > 2 else omit }}"
     virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
     virtualenv_site_packages: no
   become: yes
@@ -482,13 +507,27 @@
     - django_config
     - django_install
 
-- name: setup DjangoQ workers to run on boot up
+- name: start DjangoQ workers
   ansible.builtin.systemd:
     name: djangoq_{{ django_app }}
     state: started
+    daemon_reload: yes
+  become: yes
+  when: django_use_djangoq|default('no')|bool
+  tags:
+    - django_install
+
+- name: setup DjangoQ workers to run on boot up
+  ansible.builtin.systemd:
+    name: djangoq_{{ django_app }}
     enabled: yes
   become: yes
   when: django_use_djangoq|default('no')|bool
+  ignore_errors: yes
+  ### NOTE: this task makes the daemon start on bootup but still reports as
+  #         failing; thus by ignoring errors the desired result is achieved
+  #         without the playbook failing. This is particularly occuring
+  #         on CentOS 7.
   tags:
     - django_config
     - django_install
@@ -525,7 +564,7 @@
 - name: configure uWSGI
   ansible.builtin.template:
     src: "uwsgi_app.j2"
-    dest: "/etc/uwsgi-emperor/apps/{{ django_app }}.ini"
+    dest: "{{ django_uwsgi_apps_path }}/{{ django_app }}.ini"
     owner: root
     group: "{{ devops_group|default('adm') }}"
     mode: "0664"
@@ -549,6 +588,7 @@
   loop_control:
     label: "{{ item.name|default(item.ip) }}"
   become: yes
+  when: "ansible_os_family == 'Debian'"
   tags:
     - django_config
     - django_deploy

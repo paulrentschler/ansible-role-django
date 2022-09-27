@@ -3,7 +3,7 @@
 
 - name: Django Restart Apache
   ansible.builtin.service:
-    name: apache2
+    name: "{{ django_apache_service }}"
     state: restarted
   become: yes
 
@@ -14,7 +14,7 @@
 
 - name: Django Restart uWSGI
   ansible.builtin.file:
-    path: "/etc/uwsgi-emperor/apps/{{ django_app }}.ini"
+    path: "{{ django_uwsgi_apps_path }}/{{ django_app }}.ini"
     state: touch
   become: yes
 
