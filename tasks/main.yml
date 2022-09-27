@@ -368,51 +368,19 @@
 ##
 # Setup the database
 ##
-- name: create the database
-  community.mysql.mysql_db:
-    name: "{{ django_db_name }}"
-    state: present
-    login_unix_socket: "{{ django_db_socket }}"
-  register: _django_mysql_db_created
-  become: yes
+- name: setup the database
+  include_tasks: "db-{{ ansible_os_family }}.yml"
   when: django_db_engine == 'django.db.backends.mysql'
-  delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
-  tags:
-    - django_install
-
-- name: create the user and grant permissions
-  community.mysql.mysql_user:
-    user: "{{ django_db_user }}"
-    password: "{{ django_db_password }}"
-    host: "{% if django_db_port != '' %}{{ ansible_host|default('localhost') }}{% else %}localhost{% endif %}"
-    priv: "{{ django_db_name }}.*:ALL"
-    tls_requires:
-      ssl:
-    state: present
-    login_unix_socket: "{{ django_db_socket }}"
-  become: yes
-  when: django_db_engine == 'django.db.backends.mysql'
-  delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
   tags:
     - django_config
     - django_install
-
-# - name: ensure the database isn't read only
-#   community.mysql.mysql_variables:
-#     variable: read_only
-#     value: 0
-#   register: _django_mysql_read_only_fix
-#   become: yes
-#   changed_when: _django_mysql_read_only_fix.msg == "Variable change succeeded prev_value=ON"
-#   tags:
-#     - django_install
 
 - name: create the database schema
   community.general.django_manage:
     app_path: "{{ django_app_path }}"
     command: migrate
     virtualenv: "{{ django_virtualenv_path }}"
-  when: _django_mysql_db_created is changed
+  when: _django_mysql_db_created is defined and _django_mysql_db_created is changed
   tags:
     - django_install
 
@@ -425,7 +393,7 @@
   ansible.builtin.stat:
     path: "{{ django_app_path }}/rebuilddb.sh"
   register: _django_rebuilddb
-  when: _django_mysql_db_created is changed
+  when: _django_mysql_db_created is defined and _django_mysql_db_created is changed
   tags:
     - django_install
     - django_rebuilddb
@@ -436,7 +404,7 @@
       - "{{ django_app_path }}/rebuilddb.sh"
       - "no"
       - "{{ django_demo_data }}"
-  when: _django_mysql_db_created is changed and _django_rebuilddb.stat.exists
+  when: _django_mysql_db_created is defined and _django_mysql_db_created is changed and _django_rebuilddb.stat.exists
   tags:
     - django_install
     - django_rebuilddb`
