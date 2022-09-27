@@ -1,0 +1,7 @@
+---
+# Django variables for Debian-based systems
+
+
+django_apache_service: apache2
+django_uwsgi_apps_path: /etc/uwsgi-emperor/apps
+

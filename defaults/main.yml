@@ -23,12 +23,17 @@ django_environment: production
 django_python_version: 2
 
 # OS package dependencies
-django_dependencies:
+django_dependencies_debian:
   - logrotate
   - python-pip
   ### NOTE: needed for Python3 support
   # - python3-pip
   # - python3-venv
+django_dependencies_redhat:
+  - logrotate
+  - python-pip
+  ### NOTE: needed for Python3 support
+  # - python3-pip
 
 # Packages
 django_app_package: {}

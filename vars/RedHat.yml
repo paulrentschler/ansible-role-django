@@ -1,0 +1,7 @@
+---
+# Django variables for RedHat-based systems
+
+
+django_apache_service: httpd
+django_uwsgi_apps_path: /etc/uwsgi.d
+
