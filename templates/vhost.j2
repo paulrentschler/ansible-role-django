@@ -59,6 +59,35 @@
 
 {% endif %}
 
+{% if django_url_restrictions is defined %}
+
+    # Restrict access to specific urls
+    #   - Disable authentication (optional)
+    #   - Restrict access to only the specified IPs (optional)
+{% if django_url_restrictions.url is defined %}
+    <Location {{ django_url_restrictions.url }}>
+{% elif django_url_restrictions.url_pattern is defined %}
+    <LocationMatch "{{ django_url_restrictions.url_pattern }}">
+{% endif %}
+{% if django_url_restrictions.disable_auth|default('no')|bool and apache_use_cosign|default('no')|bool %}
+        SetHandler none
+{% endif %}
+{% if django_url_restrictions.disable_auth|default('no')|bool and apache_use_azuresso|default('no')|bool %}
+        AuthType none
+{% endif %}
+{%  if django_url_restrictions.ips is defined %}
+{% for item in django_url_restrictions.ips|flatten %}
+        Require ip {{ item }}
+{% endfor %}
+{% endif %}
+{% if django_url_restrictions.url is defined %}
+    </Location>
+{% elif django_url_restrictions.url_pattern is defined %}
+    </LocationMatch>
+{% endif %}
+
+{% endif %}
+
     # Indicate which environment the system is functioning in
     SetEnv {{ django_app|upper }}_ENVIRONMENT {{ django_environment }}
 
