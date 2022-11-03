@@ -432,7 +432,7 @@
   when: _django_mysql_db_created is defined and _django_mysql_db_created is changed and _django_rebuilddb.stat.exists
   tags:
     - django_install
-    - django_rebuilddb`
+    - django_rebuilddb
 
 
 ## Apply database schema changes
