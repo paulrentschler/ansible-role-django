@@ -44,6 +44,7 @@ django_demo_data: "no"
 
 # Logs
 django_log_files:
+  - default.log
   - piko.log
 
 # Directories to create
