@@ -15,6 +15,13 @@
     Alias {{ django_url }}/static/ {{ django_app_path }}/static/
     <Directory {{ django_app_path }}/static>
         Require all granted
+        <IfModule mod_expires.c>
+            ExpiresActive on
+            ExpiresDefault "access plus 1 year"
+            <IfModule mod_headers.c>
+                Header append Cache-Control private
+            </IfModule>
+        </IfModule>
     </Directory>
 
     # Media files (uploaded by users)
