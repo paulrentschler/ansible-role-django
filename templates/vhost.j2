@@ -50,8 +50,8 @@
 {% if django_api_access is defined and (apache_use_cosign|default('no')|bool or apache_use_azuresso|default('no')|bool) %}
 
     # API access
-    #   - Disable authentication
-    #   - Restrict access to only the specified IPs
+    #   - Disable authentication{%  if django_api_access.ips is defined %}
+    #   - Restrict access to only the specified IPs{% end if %}
     <LocationMatch "^{{ django_api_access.url }}/(.*)$">
 {% if apache_use_cosign|default('no')|bool %}
         SetHandler none
@@ -59,9 +59,13 @@
 {% if apache_use_azuresso|default('no')|bool %}
         AuthType none
 {% endif %}
+{% if django_api_access.ips is defined %}
 {% for item in django_api_access.ips|flatten %}
         Require ip {{ item }}
 {% endfor %}
+{% else %}
+        Require all granted
+{% endif %}
     </LocationMatch>
 
 {% endif %}
