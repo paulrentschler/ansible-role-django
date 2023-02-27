@@ -32,14 +32,13 @@
 
 {% if django_disable_modauthopenidc|default('no') %}
     # Disable mod_auth_openidc for the entire app
-    <Location /elba>
+    <Location {{ django_url }}>
         AuthType none
         Require all granted
     </Location>
 {% endif %}
 
 {% if django_external_submissions and (apache_use_cosign|default('no')|bool or apache_use_azuresso|default('no')|bool) %}
-
     # Disable authentication for form submissions
 {% for item in django_external_submissions %}
     <Location {{ item.url }}>
@@ -52,14 +51,14 @@
         Require ip {{ item.ip }}
     </Location>
 {% endfor %}
-
 {% endif %}
 
 {% if django_api_access is defined and (apache_use_cosign|default('no')|bool or apache_use_azuresso|default('no')|bool) %}
-
     # API access
-    #   - Disable authentication{%  if django_api_access.ips is defined %}
-    #   - Restrict access to only the specified IPs{% endif %}
+    #   - Disable authentication
+{% if django_api_access.ips is defined %}
+    #   - Restrict access to only the specified IPs
+{% endif %}
     <LocationMatch "^{{ django_api_access.url }}/(.*)$">
 {% if apache_use_cosign|default('no')|bool %}
         SetHandler none
@@ -75,11 +74,9 @@
         Require all granted
 {% endif %}
     </LocationMatch>
-
 {% endif %}
 
 {% if django_url_restrictions is defined %}
-
     # Restrict access to specific urls
     #   - Disable authentication (optional)
     #   - Restrict access to only the specified IPs (optional)
@@ -104,7 +101,6 @@
 {% elif django_url_restrictions.url_pattern is defined %}
     </LocationMatch>
 {% endif %}
-
 {% endif %}
 
     # Indicate which environment the system is functioning in
