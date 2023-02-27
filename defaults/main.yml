@@ -57,6 +57,7 @@ django_directories:
 # Settings
 django_cronjobs_template: "cronjobs.j2"
 django_settings_local_template: "settings_local.py.j2"
+django_disable_modauthopenidc: no
 django_use_djangoq: no
 
 # External submissions

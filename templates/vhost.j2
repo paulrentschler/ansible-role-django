@@ -30,6 +30,14 @@
         Require all granted
     </Directory>
 
+{% if django_disable_modauthopenidc|default('no') %}
+    # Disable mod_auth_openidc for the entire app
+    <Location /elba>
+        AuthType none
+        Require all granted
+    </Location>
+{% endif %}
+
 {% if django_external_submissions and (apache_use_cosign|default('no')|bool or apache_use_azuresso|default('no')|bool) %}
 
     # Disable authentication for form submissions
