@@ -59,7 +59,7 @@
 
     # API access
     #   - Disable authentication{%  if django_api_access.ips is defined %}
-    #   - Restrict access to only the specified IPs{% end if %}
+    #   - Restrict access to only the specified IPs{% endif %}
     <LocationMatch "^{{ django_api_access.url }}/(.*)$">
 {% if apache_use_cosign|default('no')|bool %}
         SetHandler none
