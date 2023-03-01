@@ -38,7 +38,7 @@
     </Location>
 {% endif %}
 
-{% if django_external_submissions and (apache_use_cosign|default('no')|bool or apache_use_azuresso|default('no')|bool) %}
+{% if django_external_submissions %}
     # Disable authentication for form submissions
 {% for item in django_external_submissions %}
     <Location {{ item.url }}>
@@ -53,7 +53,7 @@
 {% endfor %}
 {% endif %}
 
-{% if django_api_access is defined and (apache_use_cosign|default('no')|bool or apache_use_azuresso|default('no')|bool) %}
+{% if django_api_access is defined %}
     # API access
     #   - Disable authentication
 {% if django_api_access.ips is defined %}
