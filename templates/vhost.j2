@@ -30,9 +30,9 @@
         Require all granted
     </Directory>
 
-{% if django_disable_modauthopenidc|default('no') %}
+{% if apache_use_azuresso|default('no')|bool and django_disable_modauthopenidc|default('no') %}
     # Disable mod_auth_openidc for the entire app
-    <Location {{ django_url }}>
+    <Location {{ django_url|default('/') }}>
         AuthType none
         Require all granted
     </Location>
