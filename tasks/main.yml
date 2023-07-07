@@ -96,7 +96,7 @@
 
 - name: run the predeploy.sh script
   ansible.builtin.command: "{{ django_virtualenv_path }}/predeploy.sh"
-  when: _django_predeploy_file.stat.executable is defined and _django_predeploy_file.stat.executable
+  when: _django_predeploy_file.stat.executable|default(False)|bool
   tags:
     - django_deploy
 
@@ -115,7 +115,7 @@
   ansible.builtin.file:
     path: "{{ django_virtualenv_path }}/predeploy.sh"
     mode: "0664"
-  when: _django_predeploy_file.stat.executable is defined and _django_predeploy_file.stat.executable
+  when: _django_predeploy_file.stat.executable|default(False)|bool
   tags:
     - django_deploy
 
@@ -278,7 +278,7 @@
     owner: "{{ devops_user|default(ansible_user) }}"
     group: "{{ devops_group|default('adm') }}"
     mode: "0664"
-  when: (_django_local_settings.stat.exists and overwrite_local_settings is defined and overwrite_local_settings) or not _django_local_settings.stat.exists
+  when: (_django_local_settings.stat.exists|default(False)|bool and overwrite_local_settings|default(False)|bool) or not _django_local_settings.stat.exists|default(False)|bool
   become: yes
   notify: Django Restart uWSGI
   tags:
@@ -405,7 +405,9 @@
     app_path: "{{ django_app_path }}"
     command: migrate
     virtualenv: "{{ django_virtualenv_path }}"
-  when: _django_mysql_db_created is defined and _django_mysql_db_created is changed
+  when:
+    - _django_mysql_db_created is defined
+    - _django_mysql_db_created is changed
   tags:
     - django_install
 
@@ -418,7 +420,9 @@
   ansible.builtin.stat:
     path: "{{ django_app_path }}/rebuilddb.sh"
   register: _django_rebuilddb
-  when: _django_mysql_db_created is defined and _django_mysql_db_created is changed
+  when:
+    - _django_mysql_db_created is defined
+    - _django_mysql_db_created is changed
   tags:
     - django_install
     - django_rebuilddb
@@ -429,7 +433,10 @@
       - "{{ django_app_path }}/rebuilddb.sh"
       - "no"
       - "{{ django_demo_data }}"
-  when: _django_mysql_db_created is defined and _django_mysql_db_created is changed and _django_rebuilddb.stat.exists
+  when:
+    - _django_mysql_db_created is defined
+    - _django_mysql_db_created is changed
+    - _django_rebuilddb.stat.exists|default(False)|bool
   tags:
     - django_install
     - django_rebuilddb
@@ -485,7 +492,7 @@
     src: "{{ django_cronjobs_template }}"
     dest: "/etc/cron.d/{{ django_app }}"
   become: yes
-  when: django_cronjobs_template is defined and django_cronjobs_template != ""
+  when: django_cronjobs_template|default('') != ""
   tags:
     - django_config
     - django_cron
@@ -523,7 +530,7 @@
     enabled: yes
   become: yes
   when: django_use_djangoq|default('no')|bool
-  ignore_errors: {{ ansible_os_family == 'RedHat' }}
+  ignore_errors: "{{ ansible_os_family == 'RedHat' }}"
   ### NOTE: this task makes the daemon start on bootup but still reports as
   #         failing; thus by ignoring errors the desired result is achieved
   #         without the playbook failing.
