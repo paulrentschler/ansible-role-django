@@ -2,34 +2,76 @@
 # Setup the database on Debian-based systems
 
 
-- name: "database setup : create the database"
-  community.mysql.mysql_db:
-    name: "{{ django_db_name }}"
-    state: present
-    login_unix_socket: "{{ django_db_socket }}"
-  register: _django_mysql_db_created
-  become: yes
+- name: "database setup : database host"
+  ansible.builtin.debug:
+    var: django_db_host
   when: django_db_engine == 'django.db.backends.mysql'
-  delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
   tags:
     - django_install
 
-- name: "database setup : create the user and grant permissions"
-  community.mysql.mysql_user:
-    user: "{{ django_db_user }}"
-    password: "{{ django_db_password }}"
-    host: "{% if django_db_port != '' %}{{ ansible_host|default('localhost') }}{% else %}localhost{% endif %}"
-    priv: "{{ django_db_name }}.*:ALL"
-    tls_requires:
-      ssl:
-    state: present
-    login_unix_socket: "{{ django_db_socket }}"
-  become: yes
-  when: django_db_engine == 'django.db.backends.mysql'
-  delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
-  tags:
-    - django_config
-    - django_install
+- name: "database setup : local database"
+  block:
+    - name: "database setup : local DB : create the database"
+      community.mysql.mysql_db:
+        name: "{{ django_db_name }}"
+        state: present
+        login_unix_socket: "{{ django_db_socket }}"
+      register: _django_mysql_db_created
+      become: yes
+      when: django_db_engine == 'django.db.backends.mysql'
+      tags:
+        - django_install
+
+    - name: "database setup : local DB : create the user and grant permissions"
+      community.mysql.mysql_user:
+        user: "{{ django_db_user }}"
+        password: "{{ django_db_password }}"
+        host: "{% if django_db_port != '' %}{{ ansible_host|default('localhost') }}{% else %}localhost{% endif %}"
+        priv: "{{ django_db_name }}.*:ALL"
+        tls_requires:
+          ssl:
+        state: present
+        login_unix_socket: "{{ django_db_socket }}"
+      become: yes
+      when: django_db_engine == 'django.db.backends.mysql'
+      tags:
+        - django_config
+        - django_install
+  when: not django_db_host|default('')
+
+
+- name: "database setup : remote database"
+  block:
+    - name: "database setup : remote DB : create the database"
+      community.mysql.mysql_db:
+        name: "{{ django_db_name }}"
+        state: present
+        login_unix_socket: "{{ django_db_socket }}"
+      register: _django_mysql_db_created
+      become: yes
+      when: django_db_engine == 'django.db.backends.mysql'
+      delegate_to: "{{ django_db_host|default(omit) }}"
+      tags:
+        - django_install
+
+    - name: "database setup : remote DB : create the user and grant permissions"
+      community.mysql.mysql_user:
+        user: "{{ django_db_user }}"
+        password: "{{ django_db_password }}"
+        host: "{% if django_db_port != '' %}{{ ansible_host|default('localhost') }}{% else %}localhost{% endif %}"
+        priv: "{{ django_db_name }}.*:ALL"
+        tls_requires:
+          ssl:
+        state: present
+        login_unix_socket: "{{ django_db_socket }}"
+      become: yes
+      when: django_db_engine == 'django.db.backends.mysql'
+      delegate_to: "{{ django_db_host|default(omit) }}"
+      tags:
+        - django_config
+        - django_install
+  when: django_db_host|default('')
+
 
 # - name: "database setup : ensure the database isn't read only"
 #   community.mysql.mysql_variables:
