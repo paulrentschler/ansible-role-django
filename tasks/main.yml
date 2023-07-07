@@ -36,15 +36,15 @@
 ##
 # Create the virtual environment
 ##
-- name: install virtualenv
-  ansible.builtin.pip:
-    name: virtualenv
-    state: present
-    executable: "/usr/bin/pip"
-  become: yes
-  when: django_python_version == 2
-  tags:
-    - django_install
+# - name: install virtualenv
+#   ansible.builtin.pip:
+#     name: virtualenv
+#     state: present
+#     executable: "/usr/bin/pip"
+#   become: yes
+#   when: django_python_version == 2
+#   tags:
+#     - django_install
 
 - name: create the virtual environment directory
   ansible.builtin.file:
@@ -151,8 +151,8 @@
     name: pip
     state: latest
     virtualenv: "{{ django_virtualenv_path }}"
-    virtualenv_command: "{{ '/usr/bin/python3 -m venv' if django_python_version > 2 else omit }}"
-    virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
+    virtualenv_command: "/usr/bin/python3 -m venv"
+    # virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
   become: yes
   tags:
     - django_install
@@ -180,8 +180,8 @@
     extra_args: "-e"
     state: present
     virtualenv: "{{ django_virtualenv_path }}"
-    virtualenv_command: "{{ '/usr/bin/python3 -m venv' if django_python_version > 2 else omit }}"
-    virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
+    virtualenv_command: "/usr/bin/python3 -m venv"
+    # virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
   loop: "{{ _django_gitclone.results | flatten(levels=1) }}"
   loop_control:
     label: "{{ item.item.name }}"
@@ -238,8 +238,8 @@
     requirements: "{{ django_app_path }}/requirements.txt"
     state: present
     virtualenv: "{{ django_virtualenv_path }}"
-    virtualenv_command: "{{ '/usr/bin/python3 -m venv' if django_python_version > 2 else omit }}"
-    virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
+    virtualenv_command: "/usr/bin/python3 -m venv"
+    # virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
     virtualenv_site_packages: no
   become: yes
   notify: Django Restart uWSGI
@@ -523,11 +523,11 @@
     enabled: yes
   become: yes
   when: django_use_djangoq|default('no')|bool
-  ignore_errors: yes
+  ignore_errors: {{ ansible_os_family == 'RedHat' }}
   ### NOTE: this task makes the daemon start on bootup but still reports as
   #         failing; thus by ignoring errors the desired result is achieved
-  #         without the playbook failing. This is particularly occuring
-  #         on CentOS 7.
+  #         without the playbook failing.
+  #         This is particularly occuring on CentOS 7.
   tags:
     - django_config
     - django_install

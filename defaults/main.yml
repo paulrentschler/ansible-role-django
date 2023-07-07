@@ -20,20 +20,18 @@ django_url: "/{{ django_app }}"
 #   Valid values: development, demo, production
 #   Determines how the site behaves and messages that are repesented to the user
 django_environment: production
-django_python_version: 2
+# django_python_version: 3
 
 # OS package dependencies
 django_dependencies_debian:
   - logrotate
-  - python-pip
-  ### NOTE: needed for Python3 support
-  # - python3-pip
-  # - python3-venv
+  # - python-pip
+  - python3-pip
+  - python3-venv
 django_dependencies_redhat:
   - logrotate
-  - python-pip
-  ### NOTE: needed for Python3 support
-  # - python3-pip
+  # - python-pip
+  - python3-pip
 
 # Packages
 django_app_package: {}
