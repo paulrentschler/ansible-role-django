@@ -11,8 +11,13 @@ DATABASES = {
         'NAME': '{{ django_db_name }}',
         'USER': '{{ django_db_user }}',
         'PASSWORD': '{{ django_db_password }}',
+{% if django_db_host != "" and django_db_port != "" %}
         'HOST': '{{ django_db_host }}',
         'PORT': '{{ django_db_port }}',
+{% else %}
+        'HOST': '127.0.0.1',
+        'PORT': '',
+{% endif %}
 {% if 'mysql' in django_db_engine %}
         'OPTIONS': {
             'charset': u'utf8mb4',
