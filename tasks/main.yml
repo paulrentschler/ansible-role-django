@@ -377,7 +377,7 @@
 
 - name: create email directory
   ansible.builtin.file:
-    path: "{{ django_app_path }}/email"
+    path: "{{ django_app_path }}/emails"
     state: directory
     owner: "{{ apache_user }}"
     group: "{{ devops_group|default('adm') }}"
