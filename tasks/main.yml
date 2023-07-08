@@ -222,7 +222,7 @@
   include_tasks: saferepos.yml
   vars:
     username: "{{ users_item }}"
-  with_items: "{{ security_sudo_users }}"
+  with_items: "{{ security_sudo_users|flatten }}"
   loop_control:
     loop_var: users_item
   when: users_item != devops_user
