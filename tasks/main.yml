@@ -272,8 +272,10 @@
 
 - name: patch MySQL constraints issue in Django
   ansible.posix.patch:
-    src: "{{ django_app_path }}/mysql-constraints-fix.patch"
     dest: "{{ django_virtualenv_path }}/lib/python3.8/site-packages/django/db/backends/mysql/introspection.py"
+    remote_src: yes
+    src: "{{ django_app_path }}/mysql-constraints-fix.patch"
+    state: "present"
   become: yes
   when: _mysql_constraints_patch.stat.exists|default(False)|bool
   tags:
