@@ -1,32 +1,32 @@
 ---
-# Setup the database on RedHat-based systems
+# Setup the remote database on Debian-based systems
 
 
-- name: "database setup : create the database"
+- name: "database setup : remote DB : create the database"
   community.mysql.mysql_db:
     name: "{{ django_db_name }}"
     state: present
-    config_file: "/root/.my.cnf"
+    login_unix_socket: "{{ django_db_socket }}"
   register: _django_mysql_db_created
   become: yes
   when: django_db_engine == 'django.db.backends.mysql'
-  # delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
+  delegate_to: "{{ django_db_host|default(omit) }}"
   tags:
     - django_install
 
-- name: "database setup : create the user and grant permissions"
+- name: "database setup : remote DB : create the user and grant permissions"
   community.mysql.mysql_user:
     user: "{{ django_db_user }}"
     password: "{{ django_db_password }}"
     host: "{% if django_db_port != '' %}{{ ansible_host|default('localhost') }}{% else %}localhost{% endif %}"
     priv: "{{ django_db_name }}.*:ALL"
-    # tls_requires:
-    #   ssl:
+    tls_requires:
+      ssl:
     state: present
-    config_file: "/root/.my.cnf"
+    login_unix_socket: "{{ django_db_socket }}"
   become: yes
   when: django_db_engine == 'django.db.backends.mysql'
-  # delegate_to: "{{ django_db_host if django_db_host != '' else omit }}"
+  delegate_to: "{{ django_db_host|default(omit) }}"
   tags:
     - django_config
     - django_install

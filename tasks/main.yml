@@ -417,8 +417,15 @@
 ##
 # Setup the database
 ##
+- name: "database setup : database host"
+  ansible.builtin.debug:
+    var: django_db_host
+  when: django_db_engine == 'django.db.backends.mysql'
+  tags:
+    - django_install
+
 - name: setup the database
-  include_tasks: "db-{{ ansible_os_family }}.yml"
+  include_tasks: "db-{{ ansible_os_family }}-{% if django_db_host|default('') %}remote{% else %}local{% endif %}.yml"
   when: django_db_engine == 'django.db.backends.mysql'
   tags:
     - django_config
