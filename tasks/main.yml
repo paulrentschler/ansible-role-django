@@ -260,6 +260,29 @@
 
 
 ##
+# Patch MySQL constraints issue in Django 1.11
+##
+
+- name: check for MySQL constraints patch
+  ansible.builtin.stat:
+    path: "{{ django_app_path }}/mysql-constraints-fix.patch"
+  register: _mysql_constraints_patch
+  tags:
+    - django_install
+
+- name: patch MySQL constraints issue in Django
+  ansible.builtin.command:
+    argv:
+      - patch
+      - "-u {{ django_virtualenv_path }}/lib/python3.8/site-packages/django/db/backends/mysql/introspection.py"
+      - "-i {{ django_app_path }}/mysql-constraints-fix.patch"
+  when: _mysql_constraints_patch.stat.exists|default(False)|bool
+  tags:
+    - django_install
+
+
+
+##
 # Configure the application
 ##
 - name: check for existing local settings file
