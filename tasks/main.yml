@@ -271,11 +271,10 @@
     - django_install
 
 - name: patch MySQL constraints issue in Django
-  ansible.builtin.command:
-    argv:
-      - patch
-      - "-u {{ django_virtualenv_path }}/lib/python3.8/site-packages/django/db/backends/mysql/introspection.py"
-      - "-i {{ django_app_path }}/mysql-constraints-fix.patch"
+  ansible.posix.patch:
+    src: "{{ django_app_path }}/mysql-constraints-fix.patch"
+    dest: "{{ django_virtualenv_path }}/lib/python3.8/site-packages/django/db/backends/mysql/introspection.py"
+  become: yes
   when: _mysql_constraints_patch.stat.exists|default(False)|bool
   tags:
     - django_install
