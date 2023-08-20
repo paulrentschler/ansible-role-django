@@ -122,7 +122,7 @@
 
     ProxyPass {{ django_url }}/static !
     ProxyPass {{ django_url }}/media !
-    ProxyPass {{ django_url|default:"/" }} unix:{{ uwsgi_socket_path|default('/tmp') }}/{{ django_app }}.sock|uwsgi://uwsgi-uds-{{ django_app }}{% if not django_url %}/{% endif %}
+    ProxyPass {{ django_url|default('/') }} unix:{{ uwsgi_socket_path|default('/tmp') }}/{{ django_app }}.sock|uwsgi://uwsgi-uds-{{ django_app }}{% if not django_url %}/{% endif %}
 {% endif %}
 
 
