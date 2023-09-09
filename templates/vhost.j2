@@ -11,6 +11,11 @@
 ###
 # application-specific configuration
 ###
+{% if django_block_admin_login|default('no')|bool %}
+    # Block access to the admin login page
+    RewriteRule ^{{ django_url }}/admin/login(.*)$   -    [F,NC,L]
+{% endif %}
+
     # Static hosted files
     Alias {{ django_url }}/static/ {{ django_app_path }}/static/
     <Directory {{ django_app_path }}/static>
