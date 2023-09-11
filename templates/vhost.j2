@@ -39,7 +39,14 @@
     # Disable mod_auth_openidc for the entire app
     <Location {{ django_url|default('/') }}>
         AuthType none
-        Require all granted
+{% if item.hostname == "www" and not item.use_www|default('no')|bool %}
+        <RequireAny>
+            Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+            Require expr %{HTTP_HOST} == "{{ item.domain }}"
+        </RequireAny>
+{% else %}
+        Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+{% endif %}
     </Location>
 {% endif %}
 
@@ -53,15 +60,25 @@
 {% if apache_use_azuresso|default('no')|bool %}
         AuthType none
 {% endif %}
-        Require ip {{ item.ip }}
+        <RequireAll>
+            Require ip {{ item.ip }}
+{% if item.hostname == "www" and not item.use_www|default('no')|bool %}
+            <RequireAny>
+                Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+                Require expr %{HTTP_HOST} == "{{ item.domain }}"
+            </RequireAny>
+{% else %}
+            Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+{% endif %}
+        </RequireAll>
     </Location>
 {% endfor %}
 {% endif %}
 
-{% if django_api_access is defined %}
+{% if django_api_access|default({}) %}
     # API access
     #   - Disable authentication
-{% if django_api_access.ips is defined %}
+{% if django_api_access.ips|default([]) %}
     #   - Restrict access to only the specified IPs
 {% endif %}
     <LocationMatch "^{{ django_api_access.url }}/(.*)$">
@@ -71,41 +88,68 @@
 {% if apache_use_azuresso|default('no')|bool %}
         AuthType none
 {% endif %}
-{% if django_api_access.ips is defined %}
-{% for item in django_api_access.ips|flatten %}
-        Require ip {{ item }}
-{% endfor %}
+        <RequireAll>
+{% if item.hostname == "www" and not item.use_www|default('no')|bool %}
+            <RequireAny>
+                Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+                Require expr %{HTTP_HOST} == "{{ item.domain }}"
+            </RequireAny>
 {% else %}
-        Require all granted
+            Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
 {% endif %}
+{% if django_api_access.ips|default([]) %}
+            <RequireAny>
+{% for item in django_api_access.ips|flatten %}
+                Require ip {{ item }}
+{% endfor %}
+            </RequireAny>
+{% endif %}
+{% if not apache_use_cosign|default('no')|bool and not apache_use_azuresso|default('no')|bool %}
+            Require valid-user
+{% endif %}
+        </RequireAll>
     </LocationMatch>
 {% endif %}
 
-{% if django_url_restrictions is defined %}
+{% if django_url_restrictions|default({}) %}
     # Restrict access to specific urls
     #   - Disable authentication (optional)
     #   - Restrict access to only the specified IPs (optional)
-{% if django_url_restrictions.url is defined %}
-    <Location {{ django_url_restrictions.url }}>
-{% elif django_url_restrictions.url_pattern is defined %}
-    <LocationMatch "{{ django_url_restrictions.url_pattern }}">
+{% for item in django_url_restrictions %}
+{% if item.url|default('') %}
+    <Location {{ item.url }}>
+{% elif item.url_pattern|default('') %}
+    <LocationMatch "{{ item.url_pattern }}">
 {% endif %}
-{% if django_url_restrictions.disable_auth|default('no')|bool and apache_use_cosign|default('no')|bool %}
+{% if item.disable_auth|default('no')|bool and apache_use_cosign|default('no')|bool %}
         SetHandler none
 {% endif %}
-{% if django_url_restrictions.disable_auth|default('no')|bool and apache_use_azuresso|default('no')|bool %}
+{% if item.disable_auth|default('no')|bool and apache_use_azuresso|default('no')|bool %}
         AuthType none
 {% endif %}
-{%  if django_url_restrictions.ips is defined %}
-{% for item in django_url_restrictions.ips|flatten %}
-        Require ip {{ item }}
-{% endfor %}
+        <RequireAll>
+{% if item.hostname == "www" and not item.use_www|default('no')|bool %}
+            <RequireAny>
+                Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+                Require expr %{HTTP_HOST} == "{{ item.domain }}"
+            </RequireAny>
+{% else %}
+            Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
 {% endif %}
-{% if django_url_restrictions.url is defined %}
+{% if item.ips|default([]) %}
+            <RequireAny>
+{% for item in item.ips|flatten %}
+                Require ip {{ item }}
+{% endfor %}
+            </RequireAny>
+{% endif %}
+        </RequireAll>
+{% if item.url|default('') %}
     </Location>
-{% elif django_url_restrictions.url_pattern is defined %}
+{% elif item.url_pattern|default('') %}
     </LocationMatch>
 {% endif %}
+{% endfor %}
 {% endif %}
 
     # Indicate which environment the system is functioning in
