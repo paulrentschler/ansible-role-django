@@ -39,13 +39,10 @@
     # Disable mod_auth_openidc for the entire app
     <Location {{ django_url|default('/') }}>
         AuthType none
-{% if item.hostname == "www" and not item.use_www|default('no')|bool %}
-        <RequireAny>
-            Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
-            Require expr %{HTTP_HOST} == "{{ item.domain }}"
-        </RequireAny>
+{% if django_hostname == "" %}
+        Require expr %{HTTP_HOST} == "{{ django_domain }}"
 {% else %}
-        Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+        Require expr %{HTTP_HOST} == "{{ django_hostname }}.{{ django_domain }}"
 {% endif %}
     </Location>
 {% endif %}
@@ -62,13 +59,10 @@
 {% endif %}
         <RequireAll>
             Require ip {{ item.ip }}
-{% if item.hostname == "www" and not item.use_www|default('no')|bool %}
-            <RequireAny>
-                Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
-                Require expr %{HTTP_HOST} == "{{ item.domain }}"
-            </RequireAny>
+{% if django_hostname == "" %}
+            Require expr %{HTTP_HOST} == "{{ django_domain }}"
 {% else %}
-            Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+            Require expr %{HTTP_HOST} == "{{ django_hostname }}.{{ django_domain }}"
 {% endif %}
         </RequireAll>
     </Location>
@@ -89,13 +83,10 @@
         AuthType none
 {% endif %}
         <RequireAll>
-{% if item.hostname == "www" and not item.use_www|default('no')|bool %}
-            <RequireAny>
-                Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
-                Require expr %{HTTP_HOST} == "{{ item.domain }}"
-            </RequireAny>
+{% if django_hostname == "" %}
+            Require expr %{HTTP_HOST} == "{{ django_domain }}"
 {% else %}
-            Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+            Require expr %{HTTP_HOST} == "{{ django_hostname }}.{{ django_domain }}"
 {% endif %}
 {% if django_api_access.ips|default([]) %}
             <RequireAny>
@@ -128,13 +119,10 @@
         AuthType none
 {% endif %}
         <RequireAll>
-{% if item.hostname == "www" and not item.use_www|default('no')|bool %}
-            <RequireAny>
-                Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
-                Require expr %{HTTP_HOST} == "{{ item.domain }}"
-            </RequireAny>
+{% if django_hostname == "" %}
+            Require expr %{HTTP_HOST} == "{{ django_domain }}"
 {% else %}
-            Require expr %{HTTP_HOST} == "{{ item.hostname }}.{{ item.domain }}"
+            Require expr %{HTTP_HOST} == "{{ django_hostname }}.{{ django_domain }}"
 {% endif %}
 {% if item.ips|default([]) %}
             <RequireAny>
