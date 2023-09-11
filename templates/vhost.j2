@@ -95,7 +95,7 @@
 {% endfor %}
             </RequireAny>
 {% endif %}
-{% if not apache_use_cosign|default('no')|bool and not apache_use_azuresso|default('no')|bool %}
+{% if apache_use_cosign|default('no')|bool or apache_use_azuresso|default('no')|bool %}
             Require valid-user
 {% endif %}
         </RequireAll>
