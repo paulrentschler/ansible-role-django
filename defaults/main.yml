@@ -6,6 +6,9 @@
 django_app: ""
 django_deploy_key: ""
 
+# buffer size for HTTP headers
+django_uwsgi_buffer_size: 8192
+
 # Installation paths
 django_hostname: ""
 django_domain: ""
@@ -55,10 +58,14 @@ django_directories:
 # Settings
 django_cronjobs_template: "cronjobs.j2"
 django_settings_local_template: "settings_local.py.j2"
+
 # creates Apache rule that blocks all access to django_url/admin/login
 django_block_admin_login: no
+
 # creates Apache rule that disables authentication for django_url
 django_disable_modauthopenidc: no
+
+# use/configure the DjangoQ worker process
 django_use_djangoq: no
 
 # External submissions
