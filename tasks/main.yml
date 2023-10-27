@@ -93,6 +93,7 @@
   register: _django_predeploy_file
   tags:
     - django_deploy
+    - django_install
 
 - name: run the predeploy.sh script
   ansible.builtin.command: "{{ django_virtualenv_path }}/predeploy.sh"
@@ -110,6 +111,7 @@
   when: not _django_predeploy_file.stat.exists|default(False)|bool
   tags:
     - django_deploy
+    - django_install
 
 - name: make predeploy.sh non-executable
   ansible.builtin.file:
