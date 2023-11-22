@@ -9,6 +9,12 @@ django_deploy_key: ""
 # buffer size for HTTP headers
 django_uwsgi_buffer_size: 8192
 
+# request timeout (seconds) for longer running tasks
+#   0 means that the defaults will be used
+#   updates values in uWSGI and Apache
+django_request_timeout: 0
+
+
 # Installation paths
 django_hostname: ""
 django_domain: ""

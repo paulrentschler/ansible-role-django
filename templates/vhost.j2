@@ -153,6 +153,7 @@
             Require all granted
         </Proxy>
         ProxyVia On
+{% if django_request_timeout %}        ProxyTimeout {{ django_request_timeout }}{% endif %}
     </IfModule>
 
     RewriteRule ^{{ django_url }}$    {{ django_url }}/    [R=permanent,NC,L]
