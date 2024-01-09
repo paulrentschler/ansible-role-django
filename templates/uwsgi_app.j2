@@ -22,7 +22,7 @@ processes = {{ django_uwsgi_processes|default('4') }}
 {% if django_request_timeout %}harakiri = {{ django_request_timeout }}{% endif %}
 
 socket = {{ uwsgi_socket_path|default('/tmp') }}/%(project).sock
-{% if django_request_timeout %}socket-timeout = {{ uwsgi_socket_timeout }}{% endif %}
+{% if django_request_timeout %}socket-timeout = {{ django_request_timeout }}{% endif %}
 # chmod-socket = 666
 vacuum = true
 
