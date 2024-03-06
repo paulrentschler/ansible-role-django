@@ -238,7 +238,7 @@
 - name: install the required python libraries
   ansible.builtin.pip:
     requirements: "{{ django_app_path }}/requirements.txt"
-    state: present
+    state: latest
     virtualenv: "{{ django_virtualenv_path }}"
     virtualenv_command: "/usr/bin/python3 -m venv"
     # virtualenv_python: "{{ 'python2.7' if django_python_version == 2 else omit }}"
