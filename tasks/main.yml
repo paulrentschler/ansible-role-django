@@ -143,6 +143,7 @@
     mode: "0400"
   tags:
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -216,6 +217,7 @@
     state: present
   tags:
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -230,6 +232,7 @@
   when: users_item != devops_user
   tags:
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -247,6 +250,7 @@
   notify: Django Restart uWSGI
   tags:
     - django_deploy
+    - django_deploynogit
     - django_install
 
 - name: make manage.py executable
@@ -257,6 +261,7 @@
   tags:
     - django_config
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -294,6 +299,7 @@
   tags:
     - django_config
     - django_deploy
+    - django_deploynogit
     - django_install
 
 - name: create the local settings file
@@ -310,6 +316,7 @@
   tags:
     - django_config
     - django_deploy
+    - django_deploynogit
     - django_install
 
 - name: set the dev environment variable
@@ -485,6 +492,7 @@
   notify: Django Restart uWSGI
   tags:
     - django_deploy
+    - django_deploynogit
     - django_install
     - django_rebuilddb
 
@@ -499,6 +507,7 @@
   loop: "{{ django_extra_management_commands }}"
   tags:
     - django_deploy
+    - django_deploynogit
 
 
 
@@ -513,6 +522,7 @@
   notify: Django Restart uWSGI
   tags:
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -530,6 +540,7 @@
     - django_config
     - django_cron
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -581,6 +592,7 @@
   tags:
     - django_config
     - django_deploy
+    - django_deploynogit
 
 
 
@@ -599,6 +611,7 @@
   tags:
     - django_config
     - django_deploy
+    - django_deploynogit
     - django_install
 
 - name: configure uWSGI
@@ -612,6 +625,7 @@
   tags:
     - django_config
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -632,6 +646,7 @@
   tags:
     - django_config
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -647,6 +662,7 @@
   tags:
     - django_config
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -667,6 +683,7 @@
   tags:
     - django_config
     - django_deploy
+    - django_deploynogit
     - django_install
 
 
@@ -680,5 +697,6 @@
     state: absent
   tags:
     - django_deploy
+    - django_deploynogit
     - django_install
 
