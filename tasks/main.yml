@@ -517,6 +517,7 @@
 - name: collect the static files
   community.general.django_manage:
     app_path: "{{ django_app_path }}"
+    clear: true
     command: collectstatic
     virtualenv: "{{ django_virtualenv_path }}"
   notify: Django Restart uWSGI
