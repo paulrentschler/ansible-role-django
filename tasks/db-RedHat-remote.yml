@@ -16,10 +16,11 @@
 
 - name: "database setup : remote DB : create the user and grant permissions"
   community.mysql.mysql_user:
-    user: "{{ django_db_user }}"
+    name: "{{ django_db_user }}"
     password: "{{ django_db_password }}"
     host: "{% if django_db_port != '' %}{{ ansible_host|default('localhost') }}{% else %}localhost{% endif %}"
     priv: "{{ django_db_name }}.*:ALL"
+    column_case_sensitive: true
     # tls_requires:
     #   ssl:
     state: present
